@@ -25,6 +25,8 @@
     };
   };
 
+  security.sudo.wheelNeedsPassword = false;
+
   users.users.richard = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
