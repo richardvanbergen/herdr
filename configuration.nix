@@ -4,8 +4,16 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
 
-  networking.hostName = "herdr";
   services.openssh.enable = true;
+  services.tailscale.enable = true;
+
+  networking = {
+    hostName = "herdr";
+    firewall = {
+      trustedInterfaces = [ "tailscale0" ];
+      allowedUDPPorts = [ config.services.tailscale.port ];
+    };
+  };
 
   users.users.richard = {
     isNormalUser = true;
