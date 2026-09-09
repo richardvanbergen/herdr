@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, herdr, ... }:
 
 {
   imports = [ ./hardware-configuration.nix ];
@@ -14,7 +14,10 @@
     tailscale.enable = true;
   };
 
-  environment.systemPackages = [ pkgs.git ];
+  environment.systemPackages = [
+    pkgs.git
+    herdr.packages.x86_64-linux.default
+  ];
 
   nix = {
     settings = {
