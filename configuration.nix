@@ -4,8 +4,12 @@
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/vda";
 
-  services.openssh.enable = true;
-  services.tailscale.enable = true;
+  services = {
+    openssh.enable = true;
+    tailscale.enable = true;
+  };
+
+  environment.systemPackages = [ pkgs.git ];
 
   networking = {
     hostName = "herdr";
