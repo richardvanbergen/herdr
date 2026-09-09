@@ -7,7 +7,10 @@
   boot.loader.grub.devices = [ "/dev/vda" ];
 
   services = {
-    openssh.enable = true;
+    openssh = {
+      enable = true;
+      openFirewall = false;
+    };
     tailscale.enable = true;
   };
 
