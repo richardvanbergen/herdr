@@ -19,6 +19,10 @@
     herdr.packages.x86_64-linux.default
   ];
 
+  environment.loginShellInit = ''
+    cd /etc/nixos
+  '';
+
   nix = {
     settings = {
       experimental-features = [ "nix-command" "flakes" ];
