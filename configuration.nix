@@ -48,7 +48,8 @@ in
     "Z /etc/nixos - agent users - -"
     "a+ /etc/nixos - - - - default:user:agent:rwx,default:group:users:rwx"
     "d /home/agent/Code 0755 agent users - -"
-    "L+ /home/agent/.config/zellij/plugins - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
     "L+ /home/agent/Code/zj-agent-state - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
   ];
 
