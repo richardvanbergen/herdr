@@ -35,9 +35,12 @@ in
     fi
   '';
 
-  # /etc/nixos is root-owned by default; let agent git-pull the config in place
+  # /etc/nixos is root-owned by default; agent + richard both maintain the
+  # config here. Ownership fix + default ACL so future git writes stay
+  # writable by both users regardless of umask.
   systemd.tmpfiles.rules = [
     "Z /etc/nixos - agent users - -"
+    "a+ /etc/nixos - - - - default:user:agent:rwx,default:group:users:rwx"
   ];
 
   nix = {
