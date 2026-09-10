@@ -157,11 +157,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1789035204,
-        "narHash": "sha256-3I3Kc2NaZF9GX142N5fOXNlUnk83xa/Rf9yCKJXgPDw=",
+        "lastModified": 1789035336,
+        "narHash": "sha256-RSm9MPtFuxr/k4cwnACCpVA2siXEMscbW0Vpl2Kiy5c=",
         "owner": "richardvanbergen",
         "repo": "zj-agent-sidebar",
-        "rev": "18fe41153a5eda6d4783161ae20289162a9c696d",
+        "rev": "cea0a1847f65fa145eca25f85589707704d4ccaf",
         "type": "github"
       },
       "original": {
