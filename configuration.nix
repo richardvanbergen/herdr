@@ -29,8 +29,16 @@ in
   environment.shells = [ "${agentShell}/bin/agent-shell" ];
 
   environment.loginShellInit = ''
-    cd /etc/nixos
+    if [ "$USER" = agent ]; then
+      mkdir -p /home/agent/code
+      cd /home/agent/code
+    fi
   '';
+
+  # /etc/nixos is root-owned by default; let agent git-pull the config in place
+  systemd.tmpfiles.rules = [
+    "Z /etc/nixos - agent users - -"
+  ];
 
   nix = {
     settings = {
