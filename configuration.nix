@@ -56,6 +56,9 @@ in
 
   security.sudo.wheelNeedsPassword = false;
 
+  nixpkgs.config.allowUnfreePredicate =
+    pkg: builtins.elem (pkgs.lib.getName pkg) [ "claude-code" ];
+
   programs.zj-agent-sidebar = {
     enable = true;
     agents.enable = true;
