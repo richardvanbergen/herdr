@@ -34,19 +34,17 @@ in
     fi
   '';
 
-  # /etc/nixos is root-owned by default; agent + richard both maintain the
-  # config here. Ownership fix + default ACL so future git writes stay
-  # writable by both users regardless of umask. Z applies its mode to files
-  # too, so group-write self-healing uses default ACLs instead of 2775.
-  #
-  # The L+ rules wire agent's per-user pieces (never touched by the module
-  # itself, per zj-agent-sidebar's "manual on purpose" rule):
-  # - plugins/ symlinked to the store's prebuilt wasm pair
-  # - ~/Code/zj-agent-state symlinked to the pinned repo source, so hook
-  #   scripts exist at the path INSTALL.md + the hooks expect (read-only)
+  # /etc/nixos maintained by richard + agent via git. Ownership Z rule +
+  # recursive access ACL (A+) give the users group write on everything —
+  # both users edit through the group, regardless of which owns a file.
+  # Default ACL on the root dir self-heals newly git-written files (git's
+  # core.sharedRepository=group also requests group-write, the two agree).
+  # Avoid "Z ... 2775": its mode recurses onto plain files (setgid/exec
+  # churn in git).
   systemd.tmpfiles.rules = [
     "Z /etc/nixos - agent users - -"
-    "a+ /etc/nixos - - - - default:user:agent:rwx,default:group:users:rwx"
+    "A+ /etc/nixos - - - - group:users:rwX"
+    "a+ /etc/nixos - - - - default:group:users:rwx"
     "d /home/agent/Code 0755 agent users - -"
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
