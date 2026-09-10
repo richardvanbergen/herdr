@@ -1,4 +1,4 @@
-{ config, pkgs, herdr, ... }:
+{ config, pkgs, herdr, zj-agent-sidebar, ... }:
 
 let
   agentShell = pkgs.writeShellScriptBin "agent-shell" ''
@@ -30,17 +30,26 @@ in
 
   environment.loginShellInit = ''
     if [ "$USER" = agent ]; then
-      mkdir -p /home/agent/code
-      cd /home/agent/code
+      cd /home/agent/Code
     fi
   '';
 
   # /etc/nixos is root-owned by default; agent + richard both maintain the
   # config here. Ownership fix + default ACL so future git writes stay
-  # writable by both users regardless of umask.
+  # writable by both users regardless of umask. Z applies its mode to files
+  # too, so group-write self-healing uses default ACLs instead of 2775.
+  #
+  # The L+ rules wire agent's per-user pieces (never touched by the module
+  # itself, per zj-agent-sidebar's "manual on purpose" rule):
+  # - plugins/ symlinked to the store's prebuilt wasm pair
+  # - ~/Code/zj-agent-state symlinked to the pinned repo source, so hook
+  #   scripts exist at the path INSTALL.md + the hooks expect (read-only)
   systemd.tmpfiles.rules = [
     "Z /etc/nixos - agent users - -"
     "a+ /etc/nixos - - - - default:user:agent:rwx,default:group:users:rwx"
+    "d /home/agent/Code 0755 agent users - -"
+    "L+ /home/agent/.config/zellij/plugins - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij"
+    "L+ /home/agent/Code/zj-agent-state - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
   ];
 
   nix = {

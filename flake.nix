@@ -14,7 +14,7 @@
         ./configuration.nix
         zj-agent-sidebar.nixosModules.default
       ];
-      specialArgs = { inherit herdr; };
+      specialArgs = { inherit herdr zj-agent-sidebar; };
     };
   };
 }
