@@ -2,6 +2,7 @@
 
 let
   agentShell = pkgs.writeShellScriptBin "agent-shell" ''
+    export SHELL=${pkgs.bash}/bin/bash
     exec ${pkgs.zellij}/bin/zellij attach -c main
   '';
 in
