@@ -56,6 +56,11 @@ in
 
   security.sudo.wheelNeedsPassword = false;
 
+  programs.zj-agent-sidebar = {
+    enable = true;
+    agents.enable = true;
+  };
+
   users.users.richard = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
