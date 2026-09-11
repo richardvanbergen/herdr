@@ -23,6 +23,7 @@ in
   environment.systemPackages = [
     pkgs.git
     pkgs.zellij
+    pkgs.jq # claude-status.sh hook needs it; must be on the hook's PATH
     herdr.packages.x86_64-linux.default
   ];
 
