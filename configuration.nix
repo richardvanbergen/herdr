@@ -5,6 +5,46 @@ let
     export SHELL=${pkgs.bash}/bin/bash
     exec ${pkgs.zellij}/bin/zellij attach -c main
   '';
+
+  # Agent hook wiring for zj-agent-sidebar — deployed declaratively here
+  # instead of hand-pasted (overrides that repo's "manual on purpose" rule;
+  # L+ symlinks reset on every rebuild, so manual edits don't survive).
+  # Paths go through /home/agent/Code/zj-agent-state (tmpfiles symlink to
+  # the pinned repo source), matching what the hooks expect.
+  claudeHook = status: {
+    type = "command";
+    command = "sh /home/agent/Code/zj-agent-state/hooks/claude-status.sh ${status}";
+    timeout = 10;
+  };
+  claudeSettings = pkgs.writeText "claude-settings.json" (builtins.toJSON {
+    theme = "dark";
+    hooks = {
+      UserPromptSubmit = [ { hooks = [ (claudeHook "working") ]; } ];
+      Notification = [ { hooks = [ (claudeHook "blocked") ]; } ];
+      Stop = [ { hooks = [ (claudeHook "done") ]; } ];
+    };
+  });
+  codexHook = {
+    type = "command";
+    command = "ZJ_AGENT_STATE_CODEX_HOOK=v1 sh /home/agent/Code/zj-agent-state/hooks/codex-status.sh";
+    timeout = 10;
+  };
+  codexHooks = pkgs.writeText "codex-hooks.json" (builtins.toJSON {
+    hooks = builtins.listToAttrs (map
+      (event: {
+        name = event;
+        value = [ { hooks = [ codexHook ]; } ];
+      })
+      [
+        "UserPromptSubmit"
+        "PreToolUse"
+        "PermissionRequest"
+        "PostToolUse"
+        "SubagentStart"
+        "SubagentStop"
+        "Stop"
+      ]);
+  });
 in
 {
   imports = [ ./hardware-configuration.nix ];
@@ -23,7 +63,8 @@ in
   environment.systemPackages = [
     pkgs.git
     pkgs.zellij
-    pkgs.jq # claude-status.sh hook needs it; must be on the hook's PATH
+    pkgs.jq
+    pkgs.python3
     herdr.packages.x86_64-linux.default
   ];
 
@@ -50,6 +91,9 @@ in
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
     "L+ /home/agent/Code/zj-agent-state - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
+    "L+ /home/agent/.claude/settings.json - - - - ${claudeSettings}"
+    "L+ /home/agent/.codex/hooks.json - - - - ${codexHooks}"
+    "L+ /home/agent/.config/opencode/plugins/zj-agent-state.js - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
   ];
 
   nix = {
