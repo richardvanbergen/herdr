@@ -4,7 +4,7 @@ let
   # Neovim 0.13 does not exist yet — latest stable line is 0.12.x, which
   # nixos-26.05 ships. Matches the local Mac install (0.12.5).
   nvimConfig = builtins.path {
-    path = ./nvim;
+    path = ../nvim;
     name = "nvim-config";
   };
 in
