@@ -3,7 +3,9 @@
 let
   agentShell = pkgs.writeShellScriptBin "agent-shell" ''
     export SHELL=${pkgs.bash}/bin/bash
-    exec ${pkgs.zellij}/bin/zellij attach -c main
+    ${pkgs.zellij}/bin/zellij attach -c main
+    # detach/exit lands back in a real shell instead of killing SSH
+    exec ${pkgs.bash}/bin/bash
   '';
 
   # Agent hook wiring for zj-agent-sidebar — deployed declaratively here
