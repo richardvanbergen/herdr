@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ./modules/dev-tools.nix
     ./modules/agent-env.nix
+    ./modules/nvim.nix
   ];
 
   boot.loader.grub.enable = true;
