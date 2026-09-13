@@ -57,8 +57,8 @@ in
   environment.shells = [ "${agentShell}/bin/agent-shell" ];
 
   environment.loginShellInit = ''
-    if [ "$USER" = agent ]; then
-      cd /home/agent/Code
+    if [ "$USER" = agent ] || [ "$USER" = richard ]; then
+      cd /code
     fi
   '';
 
@@ -70,6 +70,16 @@ in
     "L+ /home/agent/.claude/settings.json - - - - ${claudeSettings}"
     "L+ /home/agent/.codex/hooks.json - - - - ${codexHooks}"
     "L+ /home/agent/.config/opencode/plugins/zj-agent-state.js - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
+  ];
+
+  # Shared workspace: every user (agent, richard, future hermes) lands in
+  # /code on login and shares group-write access there, same ACL pattern
+  # as /etc/nixos. Human SSH sessions and agent sessions work on the same
+  # tree without mode churn.
+  systemd.tmpfiles.rules = [
+    "d /code 2775 root users - -"
+    "A+ /code - - - - group:users:rwX"
+    "a+ /code - - - - default:group:users:rwx"
   ];
 
   users.users.agent = {
