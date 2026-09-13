@@ -67,9 +67,9 @@
   environment.variables.EDITOR = "nvim";
 
   environment.shellAliases = {
-    rebuild = "nixos-rebuild switch --refresh";
+    rebuild = "sudo nixos-rebuild switch --refresh";
     # Pull latest config into /etc/nixos, then rebuild — both users can run it
-    pullrebuild = "git -C /etc/nixos pull --ff-only && nixos-rebuild switch --refresh";
+    pullrebuild = "git -C /etc/nixos pull --ff-only && sudo nixos-rebuild switch --refresh";
   };
 
   system.stateVersion = "26.05";
