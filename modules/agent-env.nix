@@ -72,8 +72,13 @@ in
     # root-own the zellij plugin dirs before L+ links land there — agent-owned
     # parents make systemd-tmpfiles skip the root-owned symlinks ("unsafe
     # path transition"), leaving stale plugin wasm in place
+    "d /home/agent/.config 0755 root users - -"
     "d /home/agent/.config/zellij 0755 root users - -"
     "d /home/agent/.config/zellij/plugins 0755 root users - -"
+    "d /home/agent/.config/opencode 0755 root users - -"
+    "d /home/agent/.config/opencode/plugins 0755 root users - -"
+    "d /home/agent/.codex 0755 root users - -"
+    "d /home/agent/.claude 0755 root users - -"
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
     "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
     "L+ /home/agent/Code/zj-agent-state - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
