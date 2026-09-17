@@ -73,6 +73,7 @@ in
     # parents make systemd-tmpfiles skip the root-owned symlinks ("unsafe
     # path transition"), leaving stale plugin wasm in place
     "d /home/agent/.config 0755 root users - -"
+    "R+ /home/agent/.config/zellij/plugins - - - -"
     "d /home/agent/.config/zellij 0755 root users - -"
     "d /home/agent/.config/zellij/plugins 0755 root users - -"
     "d /home/agent/.config/opencode 0755 root users - -"
