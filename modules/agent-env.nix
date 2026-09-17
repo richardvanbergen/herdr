@@ -69,23 +69,21 @@ in
   systemd.tmpfiles.rules = [
     "d /code 2775 root users - -"
     "d /home/agent/Code 0755 agent users - -"
-    # root-own the zellij plugin dirs before L+ links land there — agent-owned
-    # parents make systemd-tmpfiles skip the root-owned symlinks ("unsafe
-    # path transition"), leaving stale plugin wasm in place
-    "d /home/agent/.config 0755 root users - -"
-    "R+ /home/agent/.config/zellij/plugins - - - -"
-    "d /home/agent/.config/zellij 0755 root users - -"
-    "d /home/agent/.config/zellij/plugins 0755 root users - -"
-    "d /home/agent/.config/opencode 0755 root users - -"
-    "d /home/agent/.config/opencode/plugins 0755 root users - -"
-    "d /home/agent/.codex 0755 root users - -"
-    "d /home/agent/.claude 0755 root users - -"
-    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
-    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - - - - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
-    "L+ /home/agent/Code/zj-agent-state - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
-    "L+ /home/agent/.claude/settings.json - - - - ${claudeSettings}"
-    "L+ /home/agent/.codex/hooks.json - - - - ${codexHooks}"
-    "L+ /home/agent/.config/opencode/plugins/zj-agent-state.js - - - - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
+    # Symlinks/dirs under agent's home must be owned by agent themselves:
+    # root-owned entries under an agent-owned home make systemd-tmpfiles
+    # skip them with "unsafe path transition" — which silently left the
+    # old plugin wasm deployed after input updates.
+    "d /home/agent/.config 0755 agent users - -"
+    "d /home/agent/.config/zellij/plugins 0755 agent users - -"
+    "d /home/agent/.config/opencode/plugins 0755 agent users - -"
+    "d /home/agent/.codex 0755 agent users - -"
+    "d /home/agent/.claude 0755 agent users - -"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - agent users - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - agent users - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
+    "L+ /home/agent/Code/zj-agent-state - agent users - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
+    "L+ /home/agent/.claude/settings.json - agent users - ${claudeSettings}"
+    "L+ /home/agent/.codex/hooks.json - agent users - ${codexHooks}"
+    "L+ /home/agent/.config/opencode/plugins/zj-agent-state.js - agent users - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
     "A+ /code - - - - group:users:rwX"
     "a+ /code - - - - default:group:users:rwx"
   ];
