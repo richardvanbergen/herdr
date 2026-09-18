@@ -53,6 +53,13 @@
         doCheck = false;
         env.CARGO_BUILD_TARGET = "wasm32-wasip1";
 
+        # A transitive dependency's build.rs (openssl-sys) always compiles
+        # for the host, even though the crate itself targets wasm — needs
+        # pkg-config + real OpenSSL headers to find it, neither of which
+        # are in the sandbox by default.
+        nativeBuildInputs = [ pkgs.pkg-config ];
+        buildInputs = [ pkgs.openssl ];
+
         installPhase = ''
           runHook preInstall
           mkdir -p $out/lib/zellij
