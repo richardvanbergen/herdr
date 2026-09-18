@@ -7,6 +7,8 @@
     pkgs.git
     pkgs.bun
     pkgs.awscli
+    pkgs.lazygit
+    pkgs.gcc
   ];
 
   # Docker daemon managed by systemd, declarative. Services (db, redis,
