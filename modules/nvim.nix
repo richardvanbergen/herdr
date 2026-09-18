@@ -11,6 +11,13 @@ in
 {
   environment.systemPackages = [ pkgs.neovim ];
 
+  # nvim-treesitter's :TSInstall downloads prebuilt, dynamically-linked
+  # parser tooling built for generic Linux (glibc's standard loader path),
+  # which NixOS doesn't have — fails with "NixOS cannot run dynamically
+  # linked executables ... out of the box" (nix.dev/permalink/stub-ld).
+  # nix-ld provides that stub loader so those binaries run unmodified.
+  programs.nix-ld.enable = true;
+
   # Cargo-culted from the local machine's ~/.config/nvim. LazyVim bootstraps
   # lazy.nvim and plugin deps itself on first launch (self-contained against
   # $XDG_DATA_HOME), so only the config is pinned here. oil.nvim + zellij.vim
