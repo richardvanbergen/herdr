@@ -1,4 +1,4 @@
-{ config, pkgs, zj-agent-sidebar, ... }:
+{ config, pkgs, zj-agent-harpoon, ... }:
 
 let
   agentShell = pkgs.writeShellScriptBin "agent-shell" ''
@@ -8,14 +8,14 @@ let
     exec ${pkgs.bash}/bin/bash
   '';
 
-  # Agent hook wiring for zj-agent-sidebar — deployed declaratively here
+  # Agent hook wiring for zj-agent-harpoon — deployed declaratively here
   # instead of hand-pasted (overrides that repo's "manual on purpose" rule;
   # L+ symlinks reset on every rebuild, so manual edits don't survive).
-  # Paths go through /home/agent/Code/zj-agent-state (tmpfiles symlink to
+  # Paths go through /home/agent/Code/zj-agent-harpoon (tmpfiles symlink to
   # the pinned repo source), matching what the hooks expect.
   claudeHook = status: {
     type = "command";
-    command = "sh /home/agent/Code/zj-agent-state/hooks/claude-status.sh ${status}";
+    command = "sh /home/agent/Code/zj-agent-harpoon/hooks/claude-status.sh ${status}";
     timeout = 10;
   };
   claudeSettings = pkgs.writeText "claude-settings.json" (builtins.toJSON {
@@ -28,7 +28,7 @@ let
   });
   codexHook = {
     type = "command";
-    command = "ZJ_AGENT_STATE_CODEX_HOOK=v1 sh /home/agent/Code/zj-agent-state/hooks/codex-status.sh";
+    command = "ZJ_AGENT_STATE_CODEX_HOOK=v1 sh /home/agent/Code/zj-agent-harpoon/hooks/codex-status.sh";
     timeout = 10;
   };
   codexHooks = pkgs.writeText "codex-hooks.json" (builtins.toJSON {
@@ -49,7 +49,7 @@ let
   });
 in
 {
-  programs.zj-agent-sidebar = {
+  programs.zj-agent-harpoon = {
     enable = true;
     agents.enable = true;
   };
@@ -78,12 +78,12 @@ in
     "d /home/agent/.config/opencode/plugins 0755 agent users - -"
     "d /home/agent/.codex 0755 agent users - -"
     "d /home/agent/.claude 0755 agent users - -"
-    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - agent users - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-watcher.wasm"
-    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-sidebar.wasm - agent users - ${config.programs.zj-agent-sidebar.package}/lib/zellij/zj-agent-state-sidebar.wasm"
-    "L+ /home/agent/Code/zj-agent-state - agent users - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-watcher.wasm - agent users - ${config.programs.zj-agent-harpoon.package}/lib/zellij/zj-agent-state-watcher.wasm"
+    "L+ /home/agent/.config/zellij/plugins/zj-agent-state-harpoon.wasm - agent users - ${config.programs.zj-agent-harpoon.package}/lib/zellij/zj-agent-state-harpoon.wasm"
+    "L+ /home/agent/Code/zj-agent-harpoon - agent users - ${zj-agent-harpoon.packages.x86_64-linux.wasmPlugins.src}"
     "L+ /home/agent/.claude/settings.json - agent users - ${claudeSettings}"
     "L+ /home/agent/.codex/hooks.json - agent users - ${codexHooks}"
-    "L+ /home/agent/.config/opencode/plugins/zj-agent-state.js - agent users - ${zj-agent-sidebar.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
+    "L+ /home/agent/.config/opencode/plugins/zj-agent-harpoon.js - agent users - ${zj-agent-harpoon.packages.x86_64-linux.wasmPlugins.src}/hooks/opencode-bridge.js"
     "A+ /code - - - - group:users:rwX"
     "a+ /code - - - - default:group:users:rwx"
   ];

@@ -1,4 +1,4 @@
-{ config, pkgs, herdr, zj-agent-sidebar, ... }:
+{ config, pkgs, herdr, zj-agent-harpoon, ... }:
 
 {
   imports = [
