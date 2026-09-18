@@ -6,6 +6,7 @@
     ./modules/dev-tools.nix
     ./modules/agent-env.nix
     ./modules/nvim.nix
+    ./modules/zellij.nix
   ];
 
   boot.loader.grub.enable = true;
