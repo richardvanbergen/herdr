@@ -9,6 +9,7 @@
     pkgs.awscli
     pkgs.lazygit
     pkgs.gcc
+    pkgs.gh
   ];
 
   # Docker daemon managed by systemd, declarative. Services (db, redis,
