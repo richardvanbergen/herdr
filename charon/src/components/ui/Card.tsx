@@ -1,27 +1,49 @@
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import type { Card as CardType } from '#/store/boardStore'
+
 export interface CardProps {
-  title: string
-  description?: string | null
-  createdAt: string
-  position: number
+  card: CardType
 }
 
-export function Card({ title, description, createdAt, position }: CardProps) {
-  const formattedDate = new Date(createdAt).toLocaleDateString('en-US', {
+export function Card({ card }: CardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: card.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  const formattedDate = new Date(card.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
   })
 
   return (
-    <div className="kanban-card">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`kanban-card ${isDragging ? 'dragging' : ''}`}
+    >
       <div className="card-header">
-        <span className="card-position">{position}</span>
+        <span className="card-position">{card.position}</span>
         <span className="card-date">{formattedDate}</span>
       </div>
-      <h3 className="card-title">{title}</h3>
-      {description && (
+      <h3 className="card-title">{card.title}</h3>
+      {card.description && (
         <div className="card-preview">
-          {description.substring(0, 80)}
-          {description.length > 80 && '...'}
+          {card.description.substring(0, 80)}
+          {card.description.length > 80 && '...'}
         </div>
       )}
     </div>
