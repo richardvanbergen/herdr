@@ -1,0 +1,12 @@
+services:
+  charon:
+    build: .
+    volumes:
+      - ./:/workspace
+    ports:
+      - "80:3000"
+    working_dir: /workspace
+    command: /root/.bun/bin/bun --bun run dev --host 0.0.0.0
+    restart: unless-stopped
+    environment:
+      - PATH=/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
