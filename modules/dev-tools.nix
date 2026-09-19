@@ -2,6 +2,11 @@
 
 let
   tokenPython = pkgs.python3.withPackages (ps: [ ps.python-dotenv ]);
+  readGhToken = pkgs.writeScript "read-gh-token" ''
+    #!${tokenPython}/bin/python3
+    from dotenv import dotenv_values
+    print(dotenv_values("/var/lib/hermes-config/.env").get("GH_TOKEN") or "", end="")
+  '';
   ghWithToken = pkgs.writeScriptBin "gh" ''
     #!${tokenPython}/bin/python3
     import os
@@ -26,10 +31,18 @@ in
     pkgs.awscli
     pkgs.lazygit
     pkgs.gcc
+    pkgs.ghostty.terminfo
     (lib.hiPrio ghWithToken)
   ];
 
   services.hermes-agent.extraPackages = [ (lib.hiPrio ghWithToken) ];
+
+  # Load only this credential, as data, into new interactive/login shells.
+  environment.shellInit = ''
+    if [ "$USER" = richard ] && [ -r /var/lib/hermes-config/.env ] && [ -z "''${GH_TOKEN:-}" ]; then
+      export GH_TOKEN="$(${readGhToken})"
+    fi
+  '';
 
   # Docker daemon managed by systemd, declarative. Services (db, redis,
   # prod-like stacks) run as containers; dev servers run in-process.

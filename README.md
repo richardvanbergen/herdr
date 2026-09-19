@@ -67,9 +67,11 @@ shell exports: Hermes loads them itself at startup. The old `/etc/hermes.env`
 is no longer an input. Do not edit generated copies; rebuild from SOPS instead.
 
 For GitHub CLI, add `GH_TOKEN` inside the same `hermes-env` block. The managed
-`gh` launcher reads that value at runtime and exports it only to GitHub CLI,
-including when called by Hermes or an existing SSH/Zellij shell. An explicitly
-supplied `GH_TOKEN` takes precedence. No `gh auth login` step is required.
+`gh` launcher reads that value at runtime, including when called by Hermes or
+an existing SSH/Zellij shell. New Richard login and interactive shells also
+export `GH_TOKEN` for other tools. An explicitly supplied `GH_TOKEN` takes
+precedence. No `gh auth login` step is required. Ghostty's terminal definition
+is installed system-wide so terminal commands and pagers recognize it over SSH.
 
 ### Fresh machine / replacement host
 
