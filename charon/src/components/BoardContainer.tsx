@@ -1,74 +1,98 @@
 import { useStore } from '@tanstack/react-store'
-import { boardStore } from '#/store/boardStore'
+
 import { Board } from '#/components/ui/Board'
+import { boardStore } from '#/store/boardStore'
+
+import type { Card, Column } from '#/store/boardStore'
+
+function withNormalisedPositions(cards: Card[]) {
+  return cards.map((card, index) => ({ ...card, position: index + 1 }))
+}
+
+function moveCard(
+  columns: Column[],
+  cardId: number,
+  destinationColumnId: number,
+  destinationIndex: number,
+) {
+  const sourceColumn = columns.find((column) =>
+    column.cards.some((card) => card.id === cardId),
+  )
+  const destinationColumn = columns.find(
+    (column) => column.id === destinationColumnId,
+  )
+  const card = sourceColumn?.cards.find((candidate) => candidate.id === cardId)
+
+  if (!sourceColumn || !destinationColumn || !card) return columns
+
+  const sourceIndex = sourceColumn.cards.findIndex((candidate) => candidate.id === cardId)
+  const sourceCards = sourceColumn.cards.filter((candidate) => candidate.id !== cardId)
+  const targetCards =
+    sourceColumn.id === destinationColumn.id ? sourceCards : destinationColumn.cards
+  const adjustedDestinationIndex =
+    sourceColumn.id === destinationColumn.id && sourceIndex < destinationIndex
+      ? destinationIndex - 1
+      : destinationIndex
+  const insertionIndex = Math.max(
+    0,
+    Math.min(adjustedDestinationIndex, targetCards.length),
+  )
+  const destinationCards = [...targetCards]
+  destinationCards.splice(insertionIndex, 0, {
+    ...card,
+    columnId: destinationColumnId,
+  })
+
+  return columns.map((column) => {
+    if (column.id === sourceColumn.id && column.id === destinationColumn.id) {
+      return { ...column, cards: withNormalisedPositions(destinationCards) }
+    }
+    if (column.id === sourceColumn.id) {
+      return { ...column, cards: withNormalisedPositions(sourceCards) }
+    }
+    if (column.id === destinationColumn.id) {
+      return { ...column, cards: withNormalisedPositions(destinationCards) }
+    }
+    return column
+  })
+}
 
 export function BoardContainer() {
-  const { currentBoard, isLoading, error } = useStore(boardStore)
+  const { currentBoard, error, isLoading } = useStore(boardStore)
 
-  function handleMoveCard(cardId: number, toColumnId: number, toPosition: number) {
-    boardStore.setState((prev) => {
-      if (!prev.currentBoard) return prev
-
-      const board = prev.currentBoard
-      let draggedCard: any = null
-
-      // Find and remove the card from its current column
-      const updatedColumns = board.columns.map((col) => {
-        const card = col.cards.find((c) => c.id === cardId)
-        if (card) {
-          draggedCard = card
-          return {
-            ...col,
-            cards: col.cards.filter((c) => c.id !== cardId),
-          }
-        }
-        return col
-      })
-
-      if (!draggedCard) return prev
-
-      // Add the card to the target column
-      const finalColumns = updatedColumns.map((col) => {
-        if (col.id === toColumnId) {
-          const updatedCard = { ...draggedCard, columnId: toColumnId, position: toPosition }
-          const newCards = [...col.cards, updatedCard].sort((a, b) => a.position - b.position)
-          return { ...col, cards: newCards }
-        }
-        return col
-      })
+  function handleMoveCard(
+    cardId: number,
+    destinationColumnId: number,
+    destinationIndex: number,
+  ) {
+    boardStore.setState((previous) => {
+      if (!previous.currentBoard) return previous
 
       return {
-        ...prev,
+        ...previous,
         currentBoard: {
-          ...board,
-          columns: finalColumns,
+          ...previous.currentBoard,
+          columns: moveCard(
+            previous.currentBoard.columns,
+            cardId,
+            destinationColumnId,
+            destinationIndex,
+          ),
         },
       }
     })
   }
 
   if (isLoading) {
-    return (
-      <div className="board-loading">
-        <p>Loading board...</p>
-      </div>
-    )
+    return <div className="board-loading">Loading board...</div>
   }
 
   if (error) {
-    return (
-      <div className="board-error">
-        <p>Error: {error}</p>
-      </div>
-    )
+    return <div className="board-error">Error: {error}</div>
   }
 
   if (!currentBoard) {
-    return (
-      <div className="board-empty">
-        <p>No board selected</p>
-      </div>
-    )
+    return <div className="board-empty">No board selected</div>
   }
 
   return <Board board={currentBoard} onMoveCard={handleMoveCard} />

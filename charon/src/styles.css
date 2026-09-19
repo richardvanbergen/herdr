@@ -27,10 +27,9 @@ body {
 }
 
 .app-shell {
-  height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .app-header {
@@ -64,37 +63,27 @@ body {
 
 .app-main {
   flex: 1;
+  min-height: 0;
   display: flex;
-  overflow: hidden;
 }
 
 /* Board Layout */
 .kanban-board {
   flex: 1;
+  min-width: 0;
   display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.board-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.board-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0;
-  color: var(--text);
 }
 
 .board-columns {
   flex: 1;
+  min-width: 0;
   display: flex;
+  align-items: flex-start;
   gap: 16px;
   padding: 20px 24px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
+  overscroll-behavior-x: contain;
 }
 
 /* Column Styles */
@@ -149,13 +138,21 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 14px;
-  transition: all 0.2s ease;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.sortable-card {
+  touch-action: none;
 }
 
 .kanban-card:hover {
   background: rgba(31, 38, 80, 0.8);
   border-color: var(--accent-2);
-  transform: translateY(-1px);
+}
+
+.drag-overlay {
+  box-shadow: 0 10px 28px rgb(0 0 0 / 35%);
+  cursor: grabbing;
 }
 
 .card-header {

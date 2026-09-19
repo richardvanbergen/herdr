@@ -1,63 +1,115 @@
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  closestCorners,
+  pointerWithin,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { useState } from 'react'
+
+import { CardPreview } from './Card'
 import { Column } from './Column'
-import type { Board, Card } from '#/store/boardStore'
+
+import type { Board as BoardType, Card } from '#/store/boardStore'
 
 export interface BoardProps {
-  board: Board
-  onMoveCard: (cardId: number, toColumnId: number, toPosition: number) => void
+  board: BoardType
+  onMoveCard: (cardId: number, destinationColumnId: number, destinationIndex: number) => void
+}
+
+function cardDndId(cardId: number) {
+  return `card:${cardId}`
 }
 
 export function Board({ board, onMoveCard }: BoardProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  )
 
-  const allCards = board.columns.flatMap((col) => col.cards)
+  function collisionDetectionStrategy(args: Parameters<typeof pointerWithin>[0]) {
+    const pointerCollisions = pointerWithin(args)
+    if (pointerCollisions.length > 0) {
+      const cardCollision = pointerCollisions.find(({ id }) =>
+        args.droppableContainers.find((container) => container.id === id)?.data.current
+          ?.type === 'card',
+      )
+      return cardCollision ? [cardCollision] : pointerCollisions
+    }
 
-  function handleDragStart(event: any) {
-    const card = allCards.find((c) => c.id === event.active.id)
-    setActiveCard(card || null)
+    return closestCorners(args)
   }
 
-  function handleDragEnd(event: any) {
-    const { active, over } = event
+  function handleDragStart({ active }: DragStartEvent) {
+    const cardId = active.data.current?.cardId
+    const card = board.columns
+      .flatMap((column) => column.cards)
+      .find((candidate) => candidate.id === cardId)
+
+    setActiveCard(card ?? null)
+  }
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
     setActiveCard(null)
 
-    if (!over || active.id === over.id) return
+    const cardId = active.data.current?.cardId
+    const sourceColumnId = active.data.current?.columnId
+    if (typeof cardId !== 'number' || typeof sourceColumnId !== 'number' || !over) return
 
-    const activeCard = allCards.find((c) => c.id === active.id)
-    if (!activeCard) return
+    const overData = over.data.current
+    const destinationColumnId = overData?.columnId
+    if (typeof destinationColumnId !== 'number') return
 
-    // Find which column the card was dropped into
-    const overCard = allCards.find((c) => c.id === over.id)
-    const targetColumn = overCard
-      ? board.columns.find((col) => col.cards.some((c) => c.id === overCard.id))
-      : board.columns.find((col) => col.id === over.id)
+    const destinationColumn = board.columns.find(
+      (column) => column.id === destinationColumnId,
+    )
+    if (!destinationColumn) return
 
-    if (targetColumn) {
-      const newPosition = overCard ? overCard.position : targetColumn.cards.length + 1
-      onMoveCard(activeCard.id, targetColumn.id, newPosition)
-    }
+    const overCardId = overData?.type === 'card' ? overData.cardId : undefined
+    const destinationIndex =
+      typeof overCardId === 'number'
+        ? destinationColumn.cards.findIndex((card) => card.id === overCardId)
+        : destinationColumn.cards.length
+
+    if (destinationIndex < 0) return
+
+    onMoveCard(cardId, destinationColumnId, destinationIndex)
   }
 
   return (
     <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
+      id="kanban-board"
+      autoScroll={{
+        layoutShiftCompensation: false,
+        threshold: { x: 0.2, y: 0.2 },
+      }}
+      collisionDetection={collisionDetectionStrategy}
+      onDragCancel={() => setActiveCard(null)}
       onDragEnd={handleDragEnd}
+      onDragStart={handleDragStart}
+      sensors={sensors}
     >
       <div className="kanban-board">
         <div className="board-columns">
           {board.columns.map((column) => (
-            <Column key={column.id} column={column} />
+            <Column key={column.id} column={column} cardDndId={cardDndId} />
           ))}
         </div>
       </div>
-      <DragOverlay>
-        {activeCard ? (
-          <div className="kanban-card drag-overlay">
-            <h3 className="card-title">{activeCard.title}</h3>
-          </div>
-        ) : null}
+
+      <DragOverlay adjustScale={false} dropAnimation={null}>
+        {activeCard ? <CardPreview card={activeCard} /> : null}
       </DragOverlay>
     </DndContext>
   )
