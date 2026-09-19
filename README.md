@@ -144,6 +144,9 @@ Hermes share `/code` through the `hermes` group; activation repairs existing
 access ACLs and sets default ACLs on directories so new work stays shared.
 The gateway's systemd sandbox explicitly permits writes to `/code`.
 `/etc/nixos` is mode 0700, accessible only to Richard and root.
+Richard and Hermes are also Docker group members, and the gateway explicitly
+receives that supplementary group. Docker control is root-equivalent; the
+checkout permissions restrict ordinary file access, not a trusted Docker operator.
 
 The retired agent home is backed up privately in
 `/var/backups/agent-retirement/home-agent.tar`; its files are preserved rather

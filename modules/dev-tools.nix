@@ -51,7 +51,10 @@ in
     enableOnBoot = true;
   };
 
-  # Docker group == root-equivalent on the daemon. Fine here: single-purpose
-  # box, both users already trusted.
+  # Both operators are explicitly trusted with root-equivalent Docker access.
   users.users.richard.extraGroups = [ "docker" ];
+  users.users.${config.services.hermes-agent.user}.extraGroups = [ "docker" ];
+  # Declare it on the unit too so changing access restarts the gateway and
+  # updates its running process credentials during nixos-rebuild switch.
+  systemd.services.hermes-agent.serviceConfig.SupplementaryGroups = [ "docker" ];
 }
