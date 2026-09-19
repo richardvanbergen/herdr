@@ -8,6 +8,7 @@
     ./modules/nvim.nix
     ./modules/zellij.nix
     ./modules/hermes-agent.nix
+    ./modules/tailscale-serve.nix
   ];
 
   boot.loader.grub.enable = true;
