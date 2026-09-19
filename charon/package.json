@@ -39,8 +39,6 @@
     "@tanstack/react-start": "latest",
     "@tanstack/react-store": "latest",
     "@tanstack/react-table": "latest",
-    "@tanstack/store": "latest",
-    "better-sqlite3": "^11.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.3.0",

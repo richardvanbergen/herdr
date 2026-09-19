@@ -1,6 +1,26 @@
-import { addTodo, listTodos } from './todos'
+import { os } from '@orpc/server'
+import {
+  listBoards,
+  getBoard,
+  createBoard,
+  createColumn,
+  createCard,
+  updateCard,
+  updateColumn,
+  deleteCard,
+  deleteColumn
+} from './boards'
 
-export default {
-  listTodos,
-  addTodo,
-}
+const router = os.router({
+  listBoards,
+  getBoard,
+  createBoard,
+  createColumn,
+  createCard,
+  updateCard,
+  updateColumn,
+  deleteCard,
+  deleteColumn
+})
+
+export default router

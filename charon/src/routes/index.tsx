@@ -1,87 +1,129 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { BoardContainer } from '#/components/BoardContainer'
+import { useEffect } from 'react'
+import { boardStore } from '#/store/boardStore'
 
-export const Route = createFileRoute('/')({ component: App })
+export const Route = createFileRoute('/')({
+  component: BoardPage,
+})
 
-function App() {
-  return (
-    <main className="page-wrap px-4 pb-8 pt-14">
-      <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-14">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
-        <p className="island-kicker mb-3">TanStack Start Base Template</p>
-        <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
-          Start simple, ship quickly.
-        </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          This base starter intentionally keeps things light: two routes, clean
-          structure, and the essentials you need to build from scratch.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="/about"
-            className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-          >
-            About This Starter
-          </a>
-          <a
-            href="https://tanstack.com/router"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)]"
-          >
-            Router Guide
-          </a>
-        </div>
-      </section>
+function BoardPage() {
+  useEffect(() => {
+    // Mock data for now - we'll wire up the API later
+    boardStore.setState((prev) => ({
+      ...prev,
+      currentBoard: {
+        id: 1,
+        name: 'Project Alpha',
+        columns: [
+          {
+            id: 1,
+            boardId: 1,
+            name: 'Backlog',
+            position: 1,
+            cards: [
+              {
+                id: 1,
+                columnId: 1,
+                title: 'Research competitor features',
+                description: 'Analyze top 5 competitors and document their key differentiators',
+                position: 1,
+                createdAt: '2026-01-15T10:00:00Z',
+              },
+              {
+                id: 2,
+                columnId: 1,
+                title: 'Design user personas',
+                description: 'Create 3-4 detailed user personas based on customer interviews',
+                position: 2,
+                createdAt: '2026-01-14T14:30:00Z',
+              },
+              {
+                id: 3,
+                columnId: 1,
+                title: 'Set up analytics tracking',
+                description: 'Implement Mixpanel events for key user actions',
+                position: 3,
+                createdAt: '2026-01-13T09:15:00Z',
+              },
+            ],
+          },
+          {
+            id: 2,
+            boardId: 1,
+            name: 'To Do',
+            position: 2,
+            cards: [
+              {
+                id: 4,
+                columnId: 2,
+                title: 'Write API documentation',
+                description: 'Document all REST endpoints with request/response examples',
+                position: 1,
+                createdAt: '2026-01-16T11:20:00Z',
+              },
+              {
+                id: 5,
+                columnId: 2,
+                title: 'Implement authentication flow',
+                description: 'Add OAuth2 support for Google and GitHub providers',
+                position: 2,
+                createdAt: '2026-01-15T16:45:00Z',
+              },
+            ],
+          },
+          {
+            id: 3,
+            boardId: 1,
+            name: 'In Progress',
+            position: 3,
+            cards: [
+              {
+                id: 6,
+                columnId: 3,
+                title: 'Build dashboard layout',
+                description: 'Create responsive grid system with sidebar navigation',
+                position: 1,
+                createdAt: '2026-01-17T08:00:00Z',
+              },
+            ],
+          },
+          {
+            id: 4,
+            boardId: 1,
+            name: 'Done',
+            position: 4,
+            cards: [
+              {
+                id: 7,
+                columnId: 4,
+                title: 'Project setup and configuration',
+                description: 'Initialize repo, configure CI/CD, set up development environment',
+                position: 1,
+                createdAt: '2026-01-10T13:00:00Z',
+              },
+              {
+                id: 8,
+                columnId: 4,
+                title: 'Define project scope',
+                description: 'Create PRD with feature list and timeline',
+                position: 2,
+                createdAt: '2026-01-11T10:30:00Z',
+              },
+              {
+                id: 9,
+                columnId: 4,
+                title: 'Stakeholder review',
+                description: 'Present project plan to leadership team and get approval',
+                position: 3,
+                createdAt: '2026-01-12T15:00:00Z',
+              },
+            ],
+          },
+        ],
+      },
+    }))
+  }, [])
 
-      <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          [
-            'Type-Safe Routing',
-            'Routes and links stay in sync across every page.',
-          ],
-          [
-            'Server Functions',
-            'Call server code from your UI without creating API boilerplate.',
-          ],
-          [
-            'Streaming by Default',
-            'Ship progressively rendered responses for faster experiences.',
-          ],
-          [
-            'Tailwind Native',
-            'Design quickly with utility-first styling and reusable tokens.',
-          ],
-        ].map(([title, desc], index) => (
-          <article
-            key={title}
-            className="island-shell feature-card rise-in rounded-2xl p-5"
-            style={{ animationDelay: `${index * 90 + 80}ms` }}
-          >
-            <h2 className="mb-2 text-base font-semibold text-[var(--sea-ink)]">
-              {title}
-            </h2>
-            <p className="m-0 text-sm text-[var(--sea-ink-soft)]">{desc}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="island-shell mt-8 rounded-2xl p-6">
-        <p className="island-kicker mb-2">Quick Start</p>
-        <ul className="m-0 list-disc space-y-2 pl-5 text-sm text-[var(--sea-ink-soft)]">
-          <li>
-            Edit <code>src/routes/index.tsx</code> to customize the home page.
-          </li>
-          <li>
-            Update <code>src/components/Header.tsx</code> and{' '}
-            <code>src/components/Footer.tsx</code> for brand links.
-          </li>
-          <li>
-            Add routes in <code>src/routes</code> and tweak visual tokens in{' '}
-            <code>src/styles.css</code>.
-          </li>
-        </ul>
-      </section>
-    </main>
-  )
+  return <BoardContainer />
 }
