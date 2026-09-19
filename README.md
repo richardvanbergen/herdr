@@ -1,7 +1,7 @@
 # herdr
 
 NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
-`richard` and `agent` sharing its model configuration, credentials, and identity.
+`richard` sharing its model configuration, credentials, and identity.
 
 ## Hermes and Marvin
 
@@ -9,8 +9,10 @@ NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
 OpenCode Go / `qwen3.7-max`.
 
 Edit `hermes/SOUL.md` here and rebuild to update Marvin's identity. Nix installs
-it at `/var/lib/hermes/.hermes/SOUL.md` and links it into each operator's
-`~/.hermes/SOUL.md`. The model config and `.env` are linked the same way.
+it at `/var/lib/hermes/.hermes/SOUL.md`. Activation also copies the shared
+inputs into root-owned `/var/lib/hermes-config` and links Richard's
+`~/.hermes/SOUL.md`, config and `.env` there. Keeping these outside the gateway
+profile prevents Hermes' runtime permission hardening from blocking Richard.
 Existing unmanaged files are backed up before replacement. Changes to the
 deployed soul are overwritten on rebuild.
 
@@ -27,7 +29,7 @@ The phone gateway is `hermes-agent.service`, running as `hermes`.
 
 Managed profiles must have their directory skeleton provisioned before Hermes
 starts. This pin's Python loader requires more directories than its Nix module
-creates, so this repository provisions the full skeleton for all three accounts.
+creates, so this repository provisions the full skeleton for Richard and the service account.
 
 ## Secrets and the first session
 
@@ -57,9 +59,10 @@ sudo nixos-rebuild switch --flake /etc/nixos#herdr
 
 During activation, SOPS decrypts to `/run/secrets/hermes-env` (root-only).
 Hermes' activation script explicitly runs after `setupSecrets`, copies the
-values into `/var/lib/hermes/.hermes/.env` (0640, hermes:hermes), and the gateway
-is restarted when the secret changes. Both operators belong to the `hermes`
-group, so their first CLI session reads the same credentials. Secrets are not
+values into `/var/lib/hermes/.hermes/.env` (0640, hermes:hermes) and
+`/var/lib/hermes-config/.env` (0640, root:hermes), and the gateway
+is restarted when the secret changes. Richard belongs to the `hermes`
+group, so the first CLI session reads the same credentials. Secrets are not
 shell exports: Hermes loads them itself at startup. The old `/etc/hermes.env`
 is no longer an input. Do not edit generated copies; rebuild from SOPS instead.
 
@@ -88,9 +91,7 @@ and Zellij sessions retain their old groups until restarted.
 Run on herdr after rebuilding; these checks never print secret values:
 
 ```sh
-for user in richard agent; do
-  sudo -u "$user" -H env -u HERMES_HOME python3 /etc/nixos/scripts/check-hermes.py
-done
+sudo -u richard -H env -u HERMES_HOME python3 /etc/nixos/scripts/check-hermes.py
 systemctl is-active hermes-agent
 ```
 
@@ -107,10 +108,35 @@ The original Richard and system profiles were retained under
 gateway inherited Richard's two conversations and preferences. The duplicate
 `hermes-gateway.service` user unit is disabled.
 
-The existing browser-use environment was copied into
-`/var/lib/hermes/tool-envs/browser-use`, with the gateway's executable links
-updated. This runtime tool installation is preserved on this host but is not
-provisioned by the flake on a new machine.
+## Headless browser
+
+`modules/hermes-browser.nix` selects Hermes' Browser Use backend in local,
+headless mode. Nix installs Chromium and agent-browser. A prerequisite systemd
+unit installs Browser Use CLI 0.13.10 into `/var/lib/hermes/browser-tools` using
+Nix's Python. First provision requires network access to Python package indexes;
+later boots reuse the environment. Transitive Python dependencies are resolved
+at installation time. No cloud browser key or public debugging port is needed.
+
+The CLI and Telegram toolsets expose `browser_exec`. Start a new conversation
+after deployment to pick up the tool definitions. Verify a real HTTPS page load
+without spending model tokens:
+
+```sh
+sudo -u richard -H env -u HERMES_HOME python3 /etc/nixos/scripts/check-hermes-browser.py
+sudo -u hermes -H env HERMES_HOME=/var/lib/hermes/.hermes python3 /etc/nixos/scripts/check-hermes-browser.py
+```
+
+## Login account
+
+Richard is the sole human login. Interactive SSH opens or attaches to Zellij's
+`main` session in `/code`, using Richard's existing layout and bindings. Detach
+returns to Bash. Remote commands and file transfers bypass Zellij. Agent-tool
+hooks are installed in Richard's home, and Richard owns `/etc/nixos` and `/code`.
+The `hermes` system account continues running the phone gateway.
+
+The retired agent home is backed up privately in
+`/var/backups/agent-retirement/home-agent.tar`; its files are preserved rather
+than merged over Richard's credentials and conversation state.
 
 ## Rebuild
 

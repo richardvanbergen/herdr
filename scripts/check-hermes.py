@@ -23,7 +23,7 @@ from hermes_constants import get_hermes_home
 
 
 expected = Path.home() / ".hermes"
-shared = Path("/var/lib/hermes/.hermes")
+shared = Path("/var/lib/hermes-config")
 assert get_hermes_home().resolve() == expected, "Hermes selected a different profile"
 assert not expected.is_symlink(), "Each account must own its mutable state"
 for name in [".env", "config.yaml", "SOUL.md"]:

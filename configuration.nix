@@ -28,31 +28,9 @@
     herdr.packages.x86_64-linux.default
   ];
 
-  # /etc/nixos maintained by richard + agent via git. Ownership Z rule +
-  # recursive access ACL (A+) give the users group write on everything —
-  # both users edit through the group, regardless of which owns a file.
-  # Default ACL on the root dir self-heals newly git-written files (git's
-  # core.sharedRepository=group also requests group-write, the two agree).
-  # Avoid "Z ... 2775": its mode recurses onto plain files (setgid/exec
-  # churn in git).
-  #
-  # Explicit mask below is load-bearing, not decorative: a POSIX ACL mask
-  # caps the EFFECTIVE permission of every named entry (group:users:rwX
-  # included) regardless of what that entry itself grants. /etc/nixos's own
-  # top-level directory ended up with mask::r-x (verified via getfacl —
-  # `group:users:rwx #effective:r-x`), so group:users had no real write
-  # there even though the entry said rwx: unlinking/renaming a file needs
-  # write on its *containing directory*, not the file itself, which is
-  # exactly what "git pull"/rebase kept failing on ("unable to unlink old
-  # README.md: Permission denied") while individual files (correct own
-  # mode, e.g. README.md's rw-rw-r--) looked fine in isolation. .git/ itself
-  # was unaffected (its own mask came out rwx), only the working-tree root.
+  # Richard owns the checkout; no cross-account write permissions are needed.
   systemd.tmpfiles.rules = [
-    "Z /etc/nixos - agent users - -"
-    "A+ /etc/nixos - - - - group:users:rwX"
-    "a+ /etc/nixos - - - - default:group:users:rwx"
-    "A+ /etc/nixos - - - - mask::rwx"
-    "a+ /etc/nixos - - - - default:mask::rwx"
+    "Z /etc/nixos - richard users - -"
   ];
 
   nix = {
@@ -84,7 +62,7 @@
 
   environment.shellAliases = {
     rebuild = "sudo nixos-rebuild switch --refresh";
-    # Pull latest config into /etc/nixos, then rebuild — both users can run it
+    # Pull latest config into /etc/nixos, then rebuild
     pullrebuild = "git -C /etc/nixos pull --ff-only && sudo nixos-rebuild switch --refresh";
   };
 

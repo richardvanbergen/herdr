@@ -22,5 +22,4 @@
   # Docker group == root-equivalent on the daemon. Fine here: single-purpose
   # box, both users already trusted.
   users.users.richard.extraGroups = [ "docker" ];
-  users.users.agent.extraGroups = [ "docker" ];
 }

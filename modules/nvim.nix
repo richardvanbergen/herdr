@@ -23,9 +23,7 @@ in
   # $XDG_DATA_HOME), so only the config is pinned here. oil.nvim + zellij.vim
   # included; bufferline (tab bar) disabled via lua/plugins/disabled.lua.
   systemd.tmpfiles.rules = [
-    "R /home/agent/.config/nvim - - - -"
     "R /home/richard/.config/nvim - - - -"
-    "L+ /home/agent/.config/nvim - - - - ${nvimConfig}"
     "L+ /home/richard/.config/nvim - - - - ${nvimConfig}"
   ];
 }

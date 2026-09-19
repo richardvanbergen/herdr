@@ -3,7 +3,8 @@
 let
   cfg = config.services.hermes-agent;
   hermesHome = "${cfg.stateDir}/.hermes";
-  operators = [ "richard" "agent" ];
+  sharedInputs = "/var/lib/hermes-config";
+  operators = [ "richard" ];
   # Managed homes do not scaffold themselves. Match this pin's config_home
   # requirements, including directories the upstream Nix module omits.
   stateSubdirs = [
@@ -20,6 +21,8 @@ let
   '';
 in
 {
+  imports = [ ./hermes-browser.nix ];
+
   sops = {
     defaultSopsFile = ../secrets/hermes.yaml;
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
@@ -64,6 +67,15 @@ in
 
   system.activationScripts.hermes-user-homes = lib.stringAfter [ "hermes-agent-setup" ] (
     ''
+      # Hermes may chmod its private profile to 0700 while saving auth state.
+      # Keep operator inputs outside that runtime-owned directory.
+      install -d -m 0750 -o root -g ${cfg.group} ${sharedInputs}
+      install -m 0640 -o root -g ${cfg.group} ${hermesHome}/.env ${sharedInputs}/.env
+      for file in config.yaml SOUL.md .managed; do
+        cp -L ${hermesHome}/$file ${sharedInputs}/$file
+        chown root:${cfg.group} ${sharedInputs}/$file
+        chmod 0640 ${sharedInputs}/$file
+      done
       for dir in ${lib.concatStringsSep " " stateSubdirs}; do
         install -d -m 2770 -o ${cfg.user} -g ${cfg.group} "${hermesHome}/$dir"
       done
@@ -83,7 +95,7 @@ in
           if [ -e "${home}/.hermes/$file" ] && [ ! -L "${home}/.hermes/$file" ]; then
             mv "${home}/.hermes/$file" "${home}/.hermes/$file.before-nix.$(date +%s%N)"
           fi
-          ln -sfn "${hermesHome}/$file" "${home}/.hermes/$file"
+          ln -sfn "${sharedInputs}/$file" "${home}/.hermes/$file"
           chown -h ${user}:${group} "${home}/.hermes/$file"
         done
       ''
