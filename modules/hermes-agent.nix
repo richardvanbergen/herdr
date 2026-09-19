@@ -23,6 +23,9 @@ in
 {
   imports = [ ./hermes-browser.nix ];
 
+  # ProtectSystem=strict otherwise makes /code read-only inside the gateway.
+  systemd.services.hermes-agent.serviceConfig.ReadWritePaths = [ "/code" ];
+
   sops = {
     defaultSopsFile = ../secrets/hermes.yaml;
     age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];

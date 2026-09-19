@@ -71,7 +71,7 @@ in
 
   # Richard owns the development workspace and agent-tool integration.
   systemd.tmpfiles.rules = [
-    "d /code 0755 richard users - -"
+    "d /code 2770 richard hermes - -"
     "d /home/richard/Code 0755 richard users - -"
     # Symlinks/dirs under Richard's home must be owned by Richard:
     # root-owned entries under a user-owned home make systemd-tmpfiles

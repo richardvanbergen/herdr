@@ -139,7 +139,11 @@ Richard is the sole human login. Interactive SSH opens or attaches to Zellij's
 `main` session in `/code`, using Richard's existing layout and bindings. Detach
 returns to Bash. Remote commands and file transfers bypass Zellij. Agent-tool
 hooks are installed in Richard's home, and Richard owns `/etc/nixos` and `/code`.
-The `hermes` system account continues running the phone gateway.
+The `hermes` system account continues running the phone gateway. Richard and
+Hermes share `/code` through the `hermes` group; activation repairs existing
+access ACLs and sets default ACLs on directories so new work stays shared.
+The gateway's systemd sandbox explicitly permits writes to `/code`.
+`/etc/nixos` is mode 0700, accessible only to Richard and root.
 
 The retired agent home is backed up privately in
 `/var/backups/agent-retirement/home-agent.tar`; its files are preserved rather

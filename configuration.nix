@@ -31,7 +31,24 @@
   # Richard owns the checkout; no cross-account write permissions are needed.
   systemd.tmpfiles.rules = [
     "Z /etc/nixos - richard users - -"
+    "d /etc/nixos 0700 richard users - -"
   ];
+
+  system.activationScripts.workspace-permissions = {
+    deps = [ "users" ];
+    text = ''
+      ${pkgs.coreutils}/bin/install -d -m 2770 -o richard -g hermes /code
+      # Fix existing files without following links outside the workspace.
+      ${pkgs.acl}/bin/setfacl -R -P -m g:hermes:rwX,m::rwX /code
+      # Inherit shared access in new files/directories, including existing repos.
+      ${pkgs.findutils}/bin/find /code -xdev -type d -exec \
+        ${pkgs.acl}/bin/setfacl -m d:g:hermes:rwx,d:m::rwx {} +
+      # Retire the former shared-account ACLs at the private checkout boundary.
+      ${pkgs.acl}/bin/setfacl -b -k /etc/nixos
+      ${pkgs.coreutils}/bin/chown richard:users /etc/nixos
+      ${pkgs.coreutils}/bin/chmod 0700 /etc/nixos
+    '';
+  };
 
   nix = {
     settings = {
