@@ -45,11 +45,12 @@ in
     enable = true;
 
     settings.model = {
-      default = "qwen3.7-max";
-      provider = "opencode-go";
-      base_url = "https://opencode.ai/zen/go/v1";
-      api_mode = "chat_completions";
+      default = "gpt-5.6-terra";
+      provider = "openai-api";
+      base_url = "https://api.openai.com/v1";
+      api_mode = "codex_responses";
     };
+    settings.agent.reasoning_effort = "high";
 
     environmentFiles = [ config.sops.secrets.hermes-env.path ];
 

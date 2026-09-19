@@ -6,7 +6,9 @@ NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
 ## Hermes and Marvin
 
 `modules/hermes-agent.nix` declares the provider and model:
-OpenCode Go / `qwen3.7-max`.
+OpenAI API / `gpt-5.6-terra`, with high reasoning effort. Hermes calls OpenAI's
+Responses API using `OPENAI_API_KEY` from SOPS. Add that key before deploying
+this provider configuration; it uses OpenAI API billing.
 
 Edit `hermes/SOUL.md` here and rebuild to update Marvin's identity. Nix installs
 it at `/var/lib/hermes/.hermes/SOUL.md`. Activation also copies the shared
@@ -49,7 +51,7 @@ sops edit secrets/hermes.yaml
 ```
 
 Inside the editor, the `hermes-env` value is a multiline dotenv file containing
-`OPENCODE_GO_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and
+`OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and
 `TELEGRAM_HOME_CHANNEL`. Save and close to encrypt. Commit the ciphertext,
 deploy the updated checkout to `/etc/nixos`, then run on herdr:
 

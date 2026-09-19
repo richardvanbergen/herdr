@@ -30,7 +30,7 @@ for name in [".env", "config.yaml", "SOUL.md"]:
     assert (expected / name).resolve() == shared / name, f"{name} is not shared"
 
 # A cold process must obtain its credentials from disk, with no shell exports.
-required = ["OPENCODE_GO_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_ALLOWED_USERS"]
+required = ["OPENAI_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_ALLOWED_USERS"]
 for key in required:
     os.environ.pop(key, None)
 loaded = load_hermes_dotenv()
@@ -40,8 +40,10 @@ for key in required:
 assert not (expected / ".env").stat().st_mode & 0o007, "Secrets are world-accessible"
 
 config = load_config_readonly()
-assert config["model"]["provider"] == "opencode-go", "Wrong provider"
-assert config["model"]["default"] == "qwen3.7-max", "Wrong model"
+assert config["model"]["provider"] == "openai-api", "Wrong provider"
+assert config["model"]["default"] == "gpt-5.6-terra", "Wrong model"
+assert config["model"]["api_mode"] == "codex_responses", "Wrong API mode"
+assert config["agent"]["reasoning_effort"] == "high", "Wrong reasoning effort"
 assert "Marvin" in (expected / "SOUL.md").read_text(), "Marvin identity missing"
 
 # Exercise the real CLI: Hermes re-applies 0600 to SQLite files on every open,
