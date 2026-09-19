@@ -17,13 +17,17 @@
     };
     zjstatus.url = "github:dj95/zjstatus";
 
+    # Ships its own flake with a full nixosModules.default — no packaging
+    # work needed, just consume it directly.
+    hermes-agent.url = "github:NousResearch/hermes-agent";
+
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, herdr, zj-agent-harpoon, harpoon, zjstatus, rust-overlay, ... }:
+  outputs = { self, nixpkgs, herdr, zj-agent-harpoon, harpoon, zjstatus, hermes-agent, rust-overlay, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -94,6 +98,7 @@
         modules = [
           ./configuration.nix
           zj-agent-harpoon.nixosModules.default
+          hermes-agent.nixosModules.default
         ];
         specialArgs = {
           inherit herdr zj-agent-harpoon;

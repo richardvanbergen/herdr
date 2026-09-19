@@ -7,6 +7,7 @@
     ./modules/agent-env.nix
     ./modules/nvim.nix
     ./modules/zellij.nix
+    ./modules/hermes-agent.nix
   ];
 
   boot.loader.grub.enable = true;
