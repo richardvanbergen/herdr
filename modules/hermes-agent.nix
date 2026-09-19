@@ -21,5 +21,11 @@
     # /etc/hermes.env (root-only) with OPENCODE_GO_API_KEY=... — see
     # README.md. Never put a real key in this repo.
     environmentFiles = [ "/etc/hermes.env" ];
+
+    # Puts the `hermes` CLI on PATH and exports HERMES_HOME system-wide, so
+    # an interactive shell (richard, agent) shares session/config state with
+    # the gateway service instead of each `hermes` invocation creating its
+    # own disconnected instance under the caller's own home dir.
+    addToSystemPackages = true;
   };
 }
