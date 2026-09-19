@@ -51,7 +51,6 @@
         src = harpoon;
         cargoLock.lockFile = "${harpoon}/Cargo.lock";
         doCheck = false;
-        env.CARGO_BUILD_TARGET = "wasm32-wasip1";
 
         # A transitive dependency's build.rs (openssl-sys) always compiles
         # for the host, even though the crate itself targets wasm — needs
@@ -59,6 +58,19 @@
         # are in the sandbox by default.
         nativeBuildInputs = [ pkgs.pkg-config ];
         buildInputs = [ pkgs.openssl ];
+
+        # buildRustPackage's default buildPhase derives its own --target
+        # from stdenv.hostPlatform (native x86_64-linux) regardless of
+        # env.CARGO_BUILD_TARGET, so that env var alone silently built a
+        # native binary — which can never link (zellij-tile's host-import
+        # symbols, e.g. host_run_plugin_command, only resolve under the
+        # real wasm32-wasip1 target). Call cargo directly instead, same as
+        # zj-agent-harpoon's own wasmPlugins derivation.
+        buildPhase = ''
+          runHook preBuild
+          cargo build --release --offline --target wasm32-wasip1
+          runHook postBuild
+        '';
 
         installPhase = ''
           runHook preInstall
