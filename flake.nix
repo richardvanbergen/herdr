@@ -21,13 +21,18 @@
     # work needed, just consume it directly.
     hermes-agent.url = "github:NousResearch/hermes-agent";
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, herdr, zj-agent-harpoon, harpoon, zjstatus, hermes-agent, rust-overlay, ... }:
+  outputs = { self, nixpkgs, herdr, zj-agent-harpoon, harpoon, zjstatus, hermes-agent, sops-nix, rust-overlay, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
@@ -99,6 +104,7 @@
           ./configuration.nix
           zj-agent-harpoon.nixosModules.default
           hermes-agent.nixosModules.default
+          sops-nix.nixosModules.sops
         ];
         specialArgs = {
           inherit herdr zj-agent-harpoon;

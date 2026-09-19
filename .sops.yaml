@@ -1,0 +1,9 @@
+keys:
+  - &richard age1hk2c0f3mpyqalxaxmmqmumrxw6y4es779vuh5fsn233jpjs85ymsqqa9wt
+  - &herdr age1pymgzgxxrtuw688zrwdm06mgx92h0e200shelvlqycjufd5fu48sfsy7dy
+creation_rules:
+  - path_regex: secrets/hermes\.yaml$
+    key_groups:
+      - age:
+          - *richard
+          - *herdr

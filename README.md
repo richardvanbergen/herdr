@@ -1,69 +1,84 @@
 # herdr
 
-NixOS flake for the `herdr` box. Hermes runs as one system service, with
-`richard` and `agent` sharing its configuration, sessions, and identity.
+NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
+`richard` and `agent` sharing its model configuration, credentials, and identity.
 
 ## Hermes and Marvin
 
-`modules/hermes-agent.nix` declares the provider and model. The initial choice
-matches the working phone setup: OpenCode Go / `mimo-v2.5`.
+`modules/hermes-agent.nix` declares the provider and model:
+OpenCode Go / `qwen3.7-max`.
 
 Edit `hermes/SOUL.md` here and rebuild to update Marvin's identity. Nix installs
-it at `/var/lib/hermes/.hermes/SOUL.md`. Both users' `~/.hermes` paths symlink
-to that shared directory, and both belong to the `hermes` group. Existing
-per-user directories are backed up as `~/.hermes.before-shared.<timestamp>`;
-their contents are not automatically merged. Changes to the deployed soul are
-overwritten on rebuild; memories and sessions remain mutable.
+it at `/var/lib/hermes/.hermes/SOUL.md` and links it into each operator's
+`~/.hermes/SOUL.md`. The model config and `.env` are linked the same way.
+Existing unmanaged files are backed up before replacement. Changes to the
+deployed soul are overwritten on rebuild.
+
+Each account owns its own CLI sessions and memories. The phone gateway keeps
+its conversations in `/var/lib/hermes/.hermes`, owned by `hermes`. Hermes resets
+its SQLite database and sidecars to 0600 at runtime; sharing the whole profile
+between accounts fails after the gateway opens it. The `hermes` launcher selects
+the calling user's `~/.hermes`, including in older shells with a stale global
+HERMES_HOME export. It does not use sudo.
 
 Use `hermes` directly after deployment. Do not run `hermes setup` or
 `hermes gateway install`: the NixOS module owns setup and the gateway lifecycle.
 The phone gateway is `hermes-agent.service`, running as `hermes`.
 
+Managed profiles must have their directory skeleton provisioned before Hermes
+starts. This pin's Python loader requires more directories than its Nix module
+creates, so this repository provisions the full skeleton for all three accounts.
+
 ## Secrets and the first session
 
-The model key is **`OPENCODE_GO_API_KEY`**. SOPS is a secrets manager, not the
-name of an API key. This flake does not currently configure SOPS or agenix.
-It reads a root-owned `/etc/hermes.env` outside the repository and Nix store.
+Secrets are encrypted in `secrets/hermes.yaml` using SOPS and age. `.sops.yaml`
+contains only the public recipients: Richard's personal age key and herdr's
+SSH Ed25519 host key. Only ciphertext and public keys belong in Git.
 
-On a fresh machine, provision this file **before the first rebuild/start**:
+On Richard's Mac, `sops` and `age` are installed in `~/.local/bin`. The personal
+private key is at `~/Library/Application Support/sops/age/keys.txt` (mode 0600).
+Back up that key in your password manager or another secure off-machine location;
+it lets you recover and re-encrypt secrets when replacing the server.
+
+To change credentials, from this repository on the Mac:
 
 ```sh
-sudo touch /etc/hermes.env
-sudo chown root:root /etc/hermes.env
-sudo chmod 600 /etc/hermes.env
-sudoedit /etc/hermes.env
+sops edit secrets/hermes.yaml
 ```
 
-Supply the real values in that editor, never in Git or a shell command:
-
-```dotenv
-OPENCODE_GO_API_KEY=<provider key>
-TELEGRAM_BOT_TOKEN=<bot token>
-TELEGRAM_ALLOWED_USERS=<your Telegram user ID>
-TELEGRAM_HOME_CHANNEL=<your Telegram chat ID>
-```
-
-Then run:
+Inside the editor, the `hermes-env` value is a multiline dotenv file containing
+`OPENCODE_GO_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_ALLOWED_USERS`, and
+`TELEGRAM_HOME_CHANNEL`. Save and close to encrypt. Commit the ciphertext,
+deploy the updated checkout to `/etc/nixos`, then run on herdr:
 
 ```sh
 sudo nixos-rebuild switch --flake /etc/nixos#herdr
-sudo systemctl restart hermes-agent
 ```
 
-Repeat these two commands after editing secrets. Upstream copies
-`environmentFiles` into `/var/lib/hermes/.hermes/.env` **during activation**;
-editing `/etc/hermes.env` or restarting alone does not refresh that copy.
-The restart ensures the running gateway sees the refreshed credentials even
-when a secret-only change leaves its systemd unit unchanged.
-Missing source files only produce an upstream warning, so a successful rebuild
-alone is not evidence that authentication is configured.
+During activation, SOPS decrypts to `/run/secrets/hermes-env` (root-only).
+Hermes' activation script explicitly runs after `setupSecrets`, copies the
+values into `/var/lib/hermes/.hermes/.env` (0640, hermes:hermes), and the gateway
+is restarted when the secret changes. Both operators belong to the `hermes`
+group, so their first CLI session reads the same credentials. Secrets are not
+shell exports: Hermes loads them itself at startup. The old `/etc/hermes.env`
+is no longer an input. Do not edit generated copies; rebuild from SOPS instead.
 
-The runtime `.env` is readable by the `hermes` group (including both operators),
-not by other users. Plaintext secrets never pass through Nix expressions.
-For fully automated machine provisioning, provision `/etc/hermes.env` securely
-before activation, or add sops-nix/agenix and point `environmentFiles` at its
-decrypted runtime path. The decryption identity must also be provisioned outside
-Git. See the [upstream Nix setup documentation](https://hermes-agent.nousresearch.com/docs/getting-started/nix-setup).
+### Fresh machine / replacement host
+
+Provision `/etc/ssh/ssh_host_ed25519_key` before the first NixOS activation that
+uses these secrets. Reusing the existing host identity requires restoring its
+private key securely, outside Git. If the replacement has a new host key:
+
+1. Convert its public key with `ssh-to-age` and replace the herdr recipient in
+   `.sops.yaml`.
+2. On the Mac, run `sops updatekeys secrets/hermes.yaml` using the personal key.
+3. Commit the new recipients and ciphertext, deploy, and rebuild.
+
+A new unrelated private key cannot decrypt secrets encrypted for the old host.
+Keep `sops.useSystemdActivation = false`: this pinned Hermes module needs secrets
+available during activation, before services start. See the
+[sops-nix documentation](https://github.com/Mic92/sops-nix) and
+[Hermes Nix setup](https://hermes-agent.nousresearch.com/docs/getting-started/nix-setup).
 
 Log out and back in after initially adding group membership. Existing shells
 and Zellij sessions retain their old groups until restarted.
@@ -74,16 +89,28 @@ Run on herdr after rebuilding; these checks never print secret values:
 
 ```sh
 for user in richard agent; do
-  sudo -u "$user" -H env HERMES_HOME=/var/lib/hermes/.hermes python3 /etc/nixos/scripts/check-hermes.py
   sudo -u "$user" -H env -u HERMES_HOME python3 /etc/nixos/scripts/check-hermes.py
 done
 systemctl is-active hermes-agent
 ```
 
 The check exercises Hermes' real environment loader with inherited credentials
-removed, verifies the model and identity, and opens the shared session database
-for a rolled-back write transaction. API availability requires a separate model
-request; these checks do not spend tokens or send a Telegram message.
+removed, verifies the model and identity, and invokes the real sessions CLI
+through the per-user launcher and verifies database ownership. API availability
+requires a separate model request; these checks do not spend tokens or send a
+Telegram message.
+
+## Migration backup
+
+The original Richard and system profiles were retained under
+`/var/backups/hermes-consolidation-20260919T060737Z` (root-only). The phone
+gateway inherited Richard's two conversations and preferences. The duplicate
+`hermes-gateway.service` user unit is disabled.
+
+The existing browser-use environment was copied into
+`/var/lib/hermes/tool-envs/browser-use`, with the gateway's executable links
+updated. This runtime tool installation is preserved on this host but is not
+provisioned by the flake on a new machine.
 
 ## Rebuild
 
