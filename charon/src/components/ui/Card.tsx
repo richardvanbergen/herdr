@@ -1,3 +1,4 @@
+import { useDroppable } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -29,6 +30,34 @@ export function CardPreview({ card, className = '' }: CardPreviewProps) {
         </p>
       ) : null}
     </article>
+  )
+}
+
+export interface CardDropPlaceholderProps {
+  card: Card
+  columnId: number
+  index: number
+}
+
+export function CardDropPlaceholder({
+  card,
+  columnId,
+  index,
+}: CardDropPlaceholderProps) {
+  const { setNodeRef } = useDroppable({
+    data: {
+      columnId,
+      index,
+      type: 'placeholder',
+    },
+    id: `placeholder:${columnId}:${index}`,
+  })
+
+  return (
+    <div aria-hidden="true" className="card-drop-placeholder" ref={setNodeRef}>
+      <CardPreview card={card} />
+      <span className="drop-placeholder-label">Drop here</span>
+    </div>
   )
 }
 

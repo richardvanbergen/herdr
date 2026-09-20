@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
@@ -17,6 +18,11 @@ import { CardPreview } from './Card'
 import { Column } from './Column'
 
 import type { Board as BoardType, Card } from '#/store/boardStore'
+
+export interface DropPreview {
+  columnId: number
+  index: number
+}
 
 export interface BoardProps {
   board: BoardType
@@ -29,6 +35,7 @@ function cardDndId(cardId: number) {
 
 export function Board({ board, onMoveCard }: BoardProps) {
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [dropPreview, setDropPreview] = useState<DropPreview | null>(null)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -51,6 +58,32 @@ export function Board({ board, onMoveCard }: BoardProps) {
     return closestCorners(args)
   }
 
+  function getDropPreview(over: DragOverEvent['over']): DropPreview | null {
+    if (!over) return null
+
+    const overData = over.data.current
+    const destinationColumnId = overData?.columnId
+    if (typeof destinationColumnId !== 'number') return null
+
+    if (overData?.type === 'placeholder' && typeof overData.index === 'number') {
+      return { columnId: destinationColumnId, index: overData.index }
+    }
+
+    const destinationColumn = board.columns.find(
+      (column) => column.id === destinationColumnId,
+    )
+    if (!destinationColumn) return null
+
+    const overCardId = overData?.type === 'card'
+      ? overData.cardId
+      : undefined
+    const index = typeof overCardId === 'number'
+      ? destinationColumn.cards.findIndex((card) => card.id === overCardId)
+      : destinationColumn.cards.length
+
+    return index < 0 ? null : { columnId: destinationColumnId, index }
+  }
+
   function handleDragStart({ active }: DragStartEvent) {
     const cardId = active.data.current?.cardId
     const card = board.columns
@@ -58,31 +91,26 @@ export function Board({ board, onMoveCard }: BoardProps) {
       .find((candidate) => candidate.id === cardId)
 
     setActiveCard(card ?? null)
+    setDropPreview(null)
+  }
+
+  function handleDragOver({ over }: DragOverEvent) {
+    setDropPreview(getDropPreview(over))
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
+    const preview = getDropPreview(over)
     setActiveCard(null)
+    setDropPreview(null)
 
     const cardId = active.data.current?.cardId
     const sourceColumnId = active.data.current?.columnId
     if (typeof cardId !== 'number' || typeof sourceColumnId !== 'number' || !over) return
 
-    const overData = over.data.current
-    const destinationColumnId = overData?.columnId
-    if (typeof destinationColumnId !== 'number') return
+    const destinationColumnId = preview?.columnId
+    if (typeof destinationColumnId !== 'number' || !preview) return
 
-    const destinationColumn = board.columns.find(
-      (column) => column.id === destinationColumnId,
-    )
-    if (!destinationColumn) return
-
-    const overCardId = overData?.type === 'card' ? overData.cardId : undefined
-    const destinationIndex =
-      typeof overCardId === 'number'
-        ? destinationColumn.cards.findIndex((card) => card.id === overCardId)
-        : destinationColumn.cards.length
-
-    if (destinationIndex < 0) return
+    const destinationIndex = preview.index
 
     onMoveCard(cardId, destinationColumnId, destinationIndex)
   }
@@ -95,15 +123,25 @@ export function Board({ board, onMoveCard }: BoardProps) {
         threshold: { x: 0.2, y: 0.2 },
       }}
       collisionDetection={collisionDetectionStrategy}
-      onDragCancel={() => setActiveCard(null)}
+      onDragCancel={() => {
+        setActiveCard(null)
+        setDropPreview(null)
+      }}
       onDragEnd={handleDragEnd}
+      onDragOver={handleDragOver}
       onDragStart={handleDragStart}
       sensors={sensors}
     >
       <div className="kanban-board">
         <div className="board-columns">
           {board.columns.map((column) => (
-            <Column key={column.id} column={column} cardDndId={cardDndId} />
+            <Column
+              activeCard={activeCard}
+              cardDndId={cardDndId}
+              column={column}
+              dropPreview={dropPreview}
+              key={column.id}
+            />
           ))}
         </div>
       </div>

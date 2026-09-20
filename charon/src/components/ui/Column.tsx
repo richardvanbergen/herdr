@@ -1,16 +1,21 @@
+import { Fragment } from 'react'
+
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
-import { SortableCard } from './Card'
+import { CardDropPlaceholder, SortableCard } from './Card'
 
-import type { Column as ColumnType } from '#/store/boardStore'
+import type { DropPreview } from './Board'
+import type { Card, Column as ColumnType } from '#/store/boardStore'
 
 export interface ColumnProps {
+  activeCard: Card | null
   cardDndId: (cardId: number) => string
   column: ColumnType
+  dropPreview: DropPreview | null
 }
 
-export function Column({ cardDndId, column }: ColumnProps) {
+export function Column({ activeCard, cardDndId, column, dropPreview }: ColumnProps) {
   const { setNodeRef } = useDroppable({
     data: {
       columnId: column.id,
@@ -18,6 +23,8 @@ export function Column({ cardDndId, column }: ColumnProps) {
     },
     id: `column:${column.id}`,
   })
+  const placeholderIndex =
+    activeCard && dropPreview?.columnId === column.id ? dropPreview.index : null
 
   return (
     <section className="kanban-column" ref={setNodeRef}>
@@ -30,13 +37,25 @@ export function Column({ cardDndId, column }: ColumnProps) {
           items={column.cards.map((card) => cardDndId(card.id))}
           strategy={verticalListSortingStrategy}
         >
-          {column.cards.map((card) => (
-            <SortableCard
-              card={card}
-              dndId={cardDndId(card.id)}
-              key={card.id}
-            />
+          {column.cards.map((card, index) => (
+            <Fragment key={card.id}>
+              {placeholderIndex === index && activeCard ? (
+                <CardDropPlaceholder
+                  card={activeCard}
+                  columnId={column.id}
+                  index={placeholderIndex}
+                />
+              ) : null}
+              <SortableCard card={card} dndId={cardDndId(card.id)} />
+            </Fragment>
           ))}
+          {placeholderIndex === column.cards.length && activeCard ? (
+            <CardDropPlaceholder
+              card={activeCard}
+              columnId={column.id}
+              index={placeholderIndex}
+            />
+          ) : null}
         </SortableContext>
       </div>
     </section>
