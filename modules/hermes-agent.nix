@@ -46,8 +46,8 @@ in
 
     settings.model = {
       default = "gpt-5.6-terra";
-      provider = "openai-api";
-      base_url = "https://api.openai.com/v1";
+      provider = "openai-codex";
+      base_url = "https://chatgpt.com/backend-api/codex";
       api_mode = "codex_responses";
     };
     settings.agent.reasoning_effort = "high";

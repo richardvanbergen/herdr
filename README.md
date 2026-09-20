@@ -6,9 +6,21 @@ NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
 ## Hermes and Marvin
 
 `modules/hermes-agent.nix` declares the provider and model:
-OpenAI API / `gpt-5.6-terra`, with high reasoning effort. Hermes calls OpenAI's
-Responses API using `OPENAI_API_KEY` from SOPS. Add that key before deploying
-this provider configuration; it uses OpenAI API billing.
+OpenAI Codex / `gpt-5.6-terra`, with high reasoning effort, authenticated by
+ChatGPT device-code OAuth. The main model uses this login rather than the
+separate OpenAI API billing route.
+
+Authenticate the phone gateway on the VPS:
+
+```sh
+sudo -u hermes -H hermes auth add openai-codex --type oauth --no-browser
+```
+
+Complete the displayed browser login. Hermes stores and refreshes these
+credentials in `/var/lib/hermes/.hermes/auth.json`, outside Git and SOPS.
+Rebuilds preserve that runtime state; a replacement host needs a new login.
+Richard's separate CLI profile needs its own login using the same command
+without `sudo -u hermes -H`. Do not copy rotating OAuth tokens between profiles.
 
 Edit `hermes/SOUL.md` here and rebuild to update Marvin's identity. Nix installs
 it at `/var/lib/hermes/.hermes/SOUL.md`. Activation also copies the shared
