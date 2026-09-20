@@ -46,9 +46,25 @@ in
     });
   };
 
+  # Give the gateway its own non-secret Git credential configuration. The
+  # helper delegates to ghWithToken, which reads GH_TOKEN only at invocation
+  # time from the protected shared config; no credential enters the Nix store.
+  systemd.services.hermes-agent.environment = {
+    GIT_CONFIG_COUNT = "4";
+    GIT_CONFIG_KEY_0 = "credential.https://github.com.helper";
+    GIT_CONFIG_VALUE_0 = "";
+    GIT_CONFIG_KEY_1 = "credential.https://github.com.helper";
+    GIT_CONFIG_VALUE_1 = "!${ghWithToken}/bin/gh auth git-credential";
+    GIT_CONFIG_KEY_2 = "credential.https://gist.github.com.helper";
+    GIT_CONFIG_VALUE_2 = "";
+    GIT_CONFIG_KEY_3 = "credential.https://gist.github.com.helper";
+    GIT_CONFIG_VALUE_3 = "!${ghWithToken}/bin/gh auth git-credential";
+    GIT_TERMINAL_PROMPT = "0";
+  };
+
   # Load only this credential, as data, into new interactive/login shells.
   environment.shellInit = ''
-    if [ "$USER" = richard ] && [ -r /var/lib/hermes-config/.env ] && [ -z "''${GH_TOKEN:-}" ]; then
+    if { [ "$USER" = richard ] || [ "$USER" = hermes ]; } && [ -r /var/lib/hermes-config/.env ] && [ -z "''${GH_TOKEN:-}" ]; then
       export GH_TOKEN="$(${readGhToken})"
     fi
   '';
