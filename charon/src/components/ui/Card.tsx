@@ -1,49 +1,76 @@
+import { useQuery } from '@tanstack/react-query'
 import { useSortable } from '@dnd-kit/react/sortable'
 
-import type { Card } from '#/store/boardStore'
+import { fetchCardContent } from '#/data/mock-card-content'
+import { useInView } from '#/hooks/use-in-view'
+
+import type { CardContent } from '#/data/mock-card-content'
 
 export interface CardPreviewProps {
-  card: Card
-  className?: string
+  card: CardContent
 }
 
-/** Presentational card used in the board and DnD Kit's DragOverlay. */
-export function CardPreview({ card, className = '' }: CardPreviewProps) {
+export function CardPreview({ card }: CardPreviewProps) {
   const formattedDate = new Date(card.createdAt).toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
   })
 
   return (
-    <article className={`kanban-card ${className}`.trim()}>
+    <article className="kanban-card">
       <div className="card-header">
-        <span className="card-position">{card.position}</span>
+        <span className="card-position">#{card.id}</span>
         <span className="card-date">{formattedDate}</span>
       </div>
       <h3 className="card-title">{card.title}</h3>
-      {card.description ? (
-        <p className="card-preview">
-          {card.description.substring(0, 80)}
-          {card.description.length > 80 ? '...' : ''}
-        </p>
-      ) : null}
+      {card.description ? <p className="card-preview">{card.description}</p> : null}
     </article>
   )
 }
 
+function CardSkeleton() {
+  return (
+    <article className="kanban-card card-skeleton" aria-label="Loading card">
+      <div className="skeleton-line skeleton-meta" />
+      <div className="skeleton-line skeleton-title" />
+      <div className="skeleton-line skeleton-copy" />
+      <div className="skeleton-line skeleton-copy short" />
+    </article>
+  )
+}
+
+export interface CardLoaderProps {
+  cardId: number
+  eager?: boolean
+}
+
+/** Resolves card content by ID through TanStack Query; it owns no local card data. */
+export function CardLoader({ cardId, eager = false }: CardLoaderProps) {
+  const { isInView, ref } = useInView<HTMLDivElement>()
+  const query = useQuery({
+    enabled: eager || isInView,
+    queryFn: () => fetchCardContent(cardId),
+    queryKey: ['card', cardId],
+    staleTime: Infinity,
+  })
+
+  return (
+    <div ref={ref}>
+      {query.data ? <CardPreview card={query.data} /> : <CardSkeleton />}
+    </div>
+  )
+}
+
 export interface SortableCardProps {
-  card: Card
+  cardId: number
   dndId: string
   group: string
   index: number
 }
 
-export function SortableCard({ card, dndId, group, index }: SortableCardProps) {
+export function SortableCard({ cardId, dndId, group, index }: SortableCardProps) {
   const { isDragSource, ref } = useSortable({
-    data: {
-      card,
-      cardId: card.id,
-    },
+    data: { cardId },
     group,
     id: dndId,
     index,
@@ -58,7 +85,7 @@ export function SortableCard({ card, dndId, group, index }: SortableCardProps) {
       className={`sortable-card${isDragSource ? ' is-drag-source' : ''}`}
       ref={ref}
     >
-      <CardPreview card={card} />
+      <CardLoader cardId={cardId} />
     </div>
   )
 }

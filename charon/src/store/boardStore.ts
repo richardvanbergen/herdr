@@ -1,34 +1,20 @@
 import { Store } from '@tanstack/react-store'
 
-export interface Card {
-  id: number
-  columnId: number
-  title: string
-  description?: string | null
-  position: number
-  createdAt: string
-}
-
-export interface Column {
-  id: number
-  boardId: number
-  name: string
-  position: number
-  cards: Card[]
-}
-
-export interface Board {
+export interface BoardColumn {
   id: number
   name: string
-  columns: Column[]
+  position: number
+  cardIds: number[]
 }
 
-export const boardStore = new Store<{
-  currentBoard: Board | null
-  isLoading: boolean
-  error: string | null
-}>({
-  currentBoard: null,
-  isLoading: false,
-  error: null,
+export interface BoardView {
+  columns: BoardColumn[]
+}
+
+/**
+ * Interaction state only: board setup plus ordered card identifiers.
+ * Card content is resolved independently by each card through TanStack Query.
+ */
+export const boardStore = new Store<BoardView>({
+  columns: [],
 })

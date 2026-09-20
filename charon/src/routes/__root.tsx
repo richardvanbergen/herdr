@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-router'
 
 import appCss from '../styles.css?url'
+import TanstackQueryProvider from '../integrations/tanstack-query/root-provider'
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -38,7 +39,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <span className="nav-status">ready</span>
             </nav>
           </header>
-          <main className="app-main">{children}</main>
+          <main className="app-main">
+            <TanstackQueryProvider>{children}</TanstackQueryProvider>
+          </main>
         </div>
         <Scripts />
       </body>
