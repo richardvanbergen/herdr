@@ -1,6 +1,4 @@
-import { useDroppable } from '@dnd-kit/core'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { useSortable } from '@dnd-kit/react/sortable'
 
 import type { Card } from '#/store/boardStore'
 
@@ -9,7 +7,7 @@ export interface CardPreviewProps {
   className?: string
 }
 
-/** Presentational card used by both the sortable item and its drag overlay. */
+/** Presentational card used in the board and DnD Kit's DragOverlay. */
 export function CardPreview({ card, className = '' }: CardPreviewProps) {
   const formattedDate = new Date(card.createdAt).toLocaleDateString('en-US', {
     day: 'numeric',
@@ -33,62 +31,32 @@ export function CardPreview({ card, className = '' }: CardPreviewProps) {
   )
 }
 
-export interface CardDropPlaceholderProps {
-  card: Card
-  columnId: number
-  index: number
-}
-
-export function CardDropPlaceholder({
-  card,
-  columnId,
-  index,
-}: CardDropPlaceholderProps) {
-  const { setNodeRef } = useDroppable({
-    data: {
-      columnId,
-      index,
-      type: 'placeholder',
-    },
-    id: `placeholder:${columnId}:${index}`,
-  })
-
-  return (
-    <div aria-hidden="true" className="card-drop-placeholder" ref={setNodeRef}>
-      <CardPreview card={card} />
-      <span className="drop-placeholder-label">Drop here</span>
-    </div>
-  )
-}
-
 export interface SortableCardProps {
   card: Card
   dndId: string
+  group: string
+  index: number
 }
 
-export function SortableCard({ card, dndId }: SortableCardProps) {
-  const { attributes, isDragging, listeners, setNodeRef, transform } = useSortable({
-    animateLayoutChanges: () => false,
+export function SortableCard({ card, dndId, group, index }: SortableCardProps) {
+  const { isDragSource, ref } = useSortable({
     data: {
+      card,
       cardId: card.id,
-      columnId: card.columnId,
-      type: 'card',
     },
+    group,
     id: dndId,
-    transition: null,
+    index,
+    transition: {
+      duration: 140,
+      easing: 'ease-out',
+    },
   })
 
   return (
     <div
-      {...attributes}
-      {...listeners}
-      className="sortable-card"
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        transition: undefined,
-        visibility: isDragging ? 'hidden' : undefined,
-      }}
+      className={`sortable-card${isDragSource ? ' is-drag-source' : ''}`}
+      ref={ref}
     >
       <CardPreview card={card} />
     </div>

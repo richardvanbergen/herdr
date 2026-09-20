@@ -1,28 +1,10 @@
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  closestCorners,
-  pointerWithin,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
-} from '@dnd-kit/core'
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import { useState } from 'react'
+import { DragDropProvider, DragOverlay, type DragEndEvent } from '@dnd-kit/react'
+import { isSortable } from '@dnd-kit/react/sortable'
 
 import { CardPreview } from './Card'
 import { Column } from './Column'
 
 import type { Board as BoardType, Card } from '#/store/boardStore'
-
-export interface DropPreview {
-  columnId: number
-  index: number
-}
 
 export interface BoardProps {
   board: BoardType
@@ -33,122 +15,55 @@ function cardDndId(cardId: number) {
   return `card:${cardId}`
 }
 
+function columnGroup(columnId: number) {
+  return `column:${columnId}`
+}
+
+function columnIdFromGroup(group: string | number | undefined) {
+  if (typeof group !== 'string' || !group.startsWith('column:')) return null
+
+  const columnId = Number(group.slice('column:'.length))
+  return Number.isInteger(columnId) ? columnId : null
+}
+
+/**
+ * Uses DnD Kit's current sortable primitives. OptimisticSortingPlugin supplies
+ * the insertion preview by moving sortable DOM nodes during the drag; DragOverlay
+ * supplies the separate, top-layer card following the pointer.
+ */
 export function Board({ board, onMoveCard }: BoardProps) {
-  const [activeCard, setActiveCard] = useState<Card | null>(null)
-  const [dropPreview, setDropPreview] = useState<DropPreview | null>(null)
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
+  function handleDragEnd({ operation }: DragEndEvent) {
+    const source = operation.source
+    if (operation.canceled || !source || !isSortable(source)) return
 
-  function collisionDetectionStrategy(args: Parameters<typeof pointerWithin>[0]) {
-    const pointerCollisions = pointerWithin(args)
-    if (pointerCollisions.length > 0) {
-      const cardCollision = pointerCollisions.find(({ id }) =>
-        args.droppableContainers.find((container) => container.id === id)?.data.current
-          ?.type === 'card',
-      )
-      return cardCollision ? [cardCollision] : pointerCollisions
-    }
+    const cardId = source.data.cardId
+    const destinationColumnId = columnIdFromGroup(source.group)
+    if (typeof cardId !== 'number' || destinationColumnId === null) return
 
-    return closestCorners(args)
-  }
-
-  function getDropPreview(over: DragOverEvent['over']): DropPreview | null {
-    if (!over) return null
-
-    const overData = over.data.current
-    const destinationColumnId = overData?.columnId
-    if (typeof destinationColumnId !== 'number') return null
-
-    if (overData?.type === 'placeholder' && typeof overData.index === 'number') {
-      return { columnId: destinationColumnId, index: overData.index }
-    }
-
-    const destinationColumn = board.columns.find(
-      (column) => column.id === destinationColumnId,
-    )
-    if (!destinationColumn) return null
-
-    const overCardId = overData?.type === 'card'
-      ? overData.cardId
-      : undefined
-    const index = typeof overCardId === 'number'
-      ? destinationColumn.cards.findIndex((card) => card.id === overCardId)
-      : destinationColumn.cards.length
-
-    return index < 0 ? null : { columnId: destinationColumnId, index }
-  }
-
-  function handleDragStart({ active }: DragStartEvent) {
-    const cardId = active.data.current?.cardId
-    const card = board.columns
-      .flatMap((column) => column.cards)
-      .find((candidate) => candidate.id === cardId)
-
-    setActiveCard(card ?? null)
-    setDropPreview(null)
-  }
-
-  function handleDragOver({ over }: DragOverEvent) {
-    setDropPreview(getDropPreview(over))
-  }
-
-  function handleDragEnd({ active, over }: DragEndEvent) {
-    const preview = getDropPreview(over)
-    setActiveCard(null)
-    setDropPreview(null)
-
-    const cardId = active.data.current?.cardId
-    const sourceColumnId = active.data.current?.columnId
-    if (typeof cardId !== 'number' || typeof sourceColumnId !== 'number' || !over) return
-
-    const destinationColumnId = preview?.columnId
-    if (typeof destinationColumnId !== 'number' || !preview) return
-
-    const destinationIndex = preview.index
-
-    onMoveCard(cardId, destinationColumnId, destinationIndex)
+    onMoveCard(cardId, destinationColumnId, source.index)
   }
 
   return (
-    <DndContext
-      id="kanban-board"
-      autoScroll={{
-        layoutShiftCompensation: false,
-        threshold: { x: 0.2, y: 0.2 },
-      }}
-      collisionDetection={collisionDetectionStrategy}
-      onDragCancel={() => {
-        setActiveCard(null)
-        setDropPreview(null)
-      }}
-      onDragEnd={handleDragEnd}
-      onDragOver={handleDragOver}
-      onDragStart={handleDragStart}
-      sensors={sensors}
-    >
+    <DragDropProvider onDragEnd={handleDragEnd}>
       <div className="kanban-board">
         <div className="board-columns">
           {board.columns.map((column) => (
             <Column
-              activeCard={activeCard}
               cardDndId={cardDndId}
               column={column}
-              dropPreview={dropPreview}
+              group={columnGroup(column.id)}
               key={column.id}
             />
           ))}
         </div>
       </div>
 
-      <DragOverlay adjustScale={false} dropAnimation={null}>
-        {activeCard ? <CardPreview card={activeCard} /> : null}
+      <DragOverlay className="drag-overlay" dropAnimation={null}>
+        {(source) => {
+          const card = source.data.card as Card | undefined
+          return card ? <CardPreview card={card} /> : null
+        }}
       </DragOverlay>
-    </DndContext>
+    </DragDropProvider>
   )
 }

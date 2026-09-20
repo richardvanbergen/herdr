@@ -25,18 +25,10 @@ function moveCard(
 
   if (!sourceColumn || !destinationColumn || !card) return columns
 
-  const sourceIndex = sourceColumn.cards.findIndex((candidate) => candidate.id === cardId)
   const sourceCards = sourceColumn.cards.filter((candidate) => candidate.id !== cardId)
   const targetCards =
     sourceColumn.id === destinationColumn.id ? sourceCards : destinationColumn.cards
-  const adjustedDestinationIndex =
-    sourceColumn.id === destinationColumn.id && sourceIndex < destinationIndex
-      ? destinationIndex - 1
-      : destinationIndex
-  const insertionIndex = Math.max(
-    0,
-    Math.min(adjustedDestinationIndex, targetCards.length),
-  )
+  const insertionIndex = Math.max(0, Math.min(destinationIndex, targetCards.length))
   const destinationCards = [...targetCards]
   destinationCards.splice(insertionIndex, 0, {
     ...card,
