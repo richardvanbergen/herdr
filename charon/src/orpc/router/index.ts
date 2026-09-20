@@ -9,7 +9,7 @@ import {
   updateColumn,
   deleteCard,
   deleteColumn
-} from './boards'
+} from '#/board/server/orpc'
 
 const router = os.router({
   listBoards,

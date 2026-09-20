@@ -1,6 +1,6 @@
-import { SortableCard } from './Card'
+import { SortableCard } from '#/card/components/Card'
 
-import type { BoardColumn } from '#/store/boardStore'
+import type { BoardColumn } from '#/board/board-store'
 
 export interface ColumnProps {
   cardDndId: (cardId: number) => string

@@ -8,10 +8,11 @@ import {
 import { PointerActivationConstraints } from '@dnd-kit/dom'
 import { isSortable } from '@dnd-kit/react/sortable'
 
-import { CardLoader } from './Card'
+import { CardLoader } from '#/card/components/Card'
+
 import { Column } from './Column'
 
-import type { BoardView } from '#/store/boardStore'
+import type { BoardView } from '#/board/board-store'
 
 export interface BoardProps {
   board: BoardView

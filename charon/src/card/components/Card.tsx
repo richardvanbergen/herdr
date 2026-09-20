@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSortable } from '@dnd-kit/react/sortable'
 
-import { fetchCardContent } from '#/data/mock-card-content'
-import { useInView } from '#/hooks/use-in-view'
+import { fetchCardContent } from '#/card/data/mock-card-content'
+import { useInView } from '#/card/hooks/use-in-view'
 
-import type { CardContent } from '#/data/mock-card-content'
+import type { CardContent } from '#/card/data/mock-card-content'
 
 export interface CardPreviewProps {
   card: CardContent

@@ -1,9 +1,10 @@
 import { useStore } from '@tanstack/react-store'
 
-import { Board } from '#/components/ui/Board'
-import { boardStore } from '#/store/boardStore'
+import { boardStore } from '#/board/board-store'
 
-import type { BoardColumn } from '#/store/boardStore'
+import { Board } from './Board'
+
+import type { BoardColumn } from '#/board/board-store'
 
 function moveCardId(
   columns: BoardColumn[],

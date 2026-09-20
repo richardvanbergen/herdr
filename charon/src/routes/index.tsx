@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { BoardContainer } from '#/components/BoardContainer'
-import { boardStore } from '#/store/boardStore'
+import { BoardContainer } from '#/board/components/BoardContainer'
+import { boardStore } from '#/board/board-store'
 
 export const Route = createFileRoute('/')({
   component: BoardPage,
