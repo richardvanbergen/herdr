@@ -37,6 +37,15 @@ in
 
   services.hermes-agent.extraPackages = [ (lib.hiPrio ghWithToken) ];
 
+  # System Git config is rebuilt from Nix. Use the token-loading launcher,
+  # rather than the raw gh binary that `gh auth setup-git` would record.
+  programs.git = {
+    enable = true;
+    config.credential = lib.genAttrs [ "https://github.com" "https://gist.github.com" ] (_: {
+      helper = [ "" "!${ghWithToken}/bin/gh auth git-credential" ];
+    });
+  };
+
   # Load only this credential, as data, into new interactive/login shells.
   environment.shellInit = ''
     if [ "$USER" = richard ] && [ -r /var/lib/hermes-config/.env ] && [ -z "''${GH_TOKEN:-}" ]; then

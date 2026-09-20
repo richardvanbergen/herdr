@@ -87,6 +87,11 @@ export `GH_TOKEN` for other tools. An explicitly supplied `GH_TOKEN` takes
 precedence. No `gh auth login` step is required. Ghostty's terminal definition
 is installed system-wide so terminal commands and pagers recognize it over SSH.
 
+Nix also generates `/etc/gitconfig` with GitHub and Gist credential helpers
+pointing at that token-loading launcher, for both Richard and Hermes. No manual
+`gh auth setup-git` is needed on a rebuilt or replacement host. Repository-local
+authentication headers and user-level helper overrides can still take precedence.
+
 ### Fresh machine / replacement host
 
 Provision `/etc/ssh/ssh_host_ed25519_key` before the first NixOS activation that
