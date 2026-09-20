@@ -1,4 +1,11 @@
-import { DragDropProvider, DragOverlay, type DragEndEvent } from '@dnd-kit/react'
+import {
+  DragDropProvider,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  type DragEndEvent,
+} from '@dnd-kit/react'
+import { PointerActivationConstraints } from '@dnd-kit/dom'
 import { isSortable } from '@dnd-kit/react/sortable'
 
 import { CardPreview } from './Card'
@@ -48,7 +55,17 @@ export function Board({ board, onMoveCard }: BoardProps) {
   }
 
   return (
-    <DragDropProvider onDragEnd={handleDragEnd}>
+    <DragDropProvider
+      onDragEnd={handleDragEnd}
+      sensors={[
+        PointerSensor.configure({
+          activationConstraints: [
+            new PointerActivationConstraints.Distance({ value: 6 }),
+          ],
+        }),
+        KeyboardSensor,
+      ]}
+    >
       <div className="kanban-board">
         <div className="board-columns">
           {board.columns.map((column) => (
