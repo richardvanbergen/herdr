@@ -40,7 +40,11 @@ export function Board({ board, onMoveCard }: BoardProps) {
     const destinationColumnId = columnIdFromGroup(source.group)
     if (typeof cardId !== 'number' || destinationColumnId === null) return
 
-    onMoveCard(cardId, destinationColumnId, source.index)
+    // The sortable plugin applies its final DOM move during dragend. Defer the
+    // store reconciliation one frame so React receives the already-settled list.
+    requestAnimationFrame(() => {
+      onMoveCard(cardId, destinationColumnId, source.index)
+    })
   }
 
   return (
