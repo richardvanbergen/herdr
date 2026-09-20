@@ -1,13 +1,17 @@
-FROM node:22-alpine
+FROM node:22-bookworm-slim
 
-# Install bash and curl for Bun installer
-RUN apk add --no-cache bash curl
+# Codex needs a Linux CLI environment and access to the project workspace.
+RUN apt-get update && apt-get install -y --no-install-recommends bash curl ca-certificates git unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g @openai/codex
 
 # Install Bun
-RUN curl -fsSL https://bun.sh/install | bash && \
-    ln -s /root/.bun/bin/bun /root/.bun/bin/bunx
+RUN curl -fsSL https://bun.sh/install | bash
 
 ENV PATH="/root/.bun/bin:${PATH}"
+
+RUN mkdir -p /root/.codex
 
 WORKDIR /workspace
 

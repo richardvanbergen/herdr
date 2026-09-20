@@ -10,12 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HealthzRouteImport } from './routes/healthz'
 import { Route as ApiSplatRouteImport } from './routes/api.$'
+import { Route as ColumnColumnIdRouteImport } from './routes/column.$columnId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api.rpc.$'
+import { Route as ColumnColumnIdJobJobIdRouteImport } from './routes/column.$columnId.job.$jobId'
+import { Route as ColumnColumnIdJobJobIdTaskTaskIdRouteImport } from './routes/column.$columnId.job.$jobId.task.$taskId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthzRoute = HealthzRouteImport.update({
+  id: '/healthz',
+  path: '/healthz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
@@ -23,39 +32,91 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ColumnColumnIdRoute = ColumnColumnIdRouteImport.update({
+  id: '/column/$columnId',
+  path: '/column/$columnId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ColumnColumnIdJobJobIdRoute = ColumnColumnIdJobJobIdRouteImport.update({
+  id: '/job/$jobId',
+  path: '/job/$jobId',
+  getParentRoute: () => ColumnColumnIdRoute,
+} as any)
+const ColumnColumnIdJobJobIdTaskTaskIdRoute =
+  ColumnColumnIdJobJobIdTaskTaskIdRouteImport.update({
+    id: '/task/$taskId',
+    path: '/task/$taskId',
+    getParentRoute: () => ColumnColumnIdJobJobIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/api/$': typeof ApiSplatRoute
+  '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/api/$': typeof ApiSplatRoute
+  '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/healthz': typeof HealthzRoute
   '/api/$': typeof ApiSplatRoute
+  '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/$' | '/api/rpc/$'
+  fullPaths:
+    | '/'
+    | '/healthz'
+    | '/api/$'
+    | '/column/$columnId'
+    | '/api/rpc/$'
+    | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/$jobId/task/$taskId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/$' | '/api/rpc/$'
-  id: '__root__' | '/' | '/api/$' | '/api/rpc/$'
+  to:
+    | '/'
+    | '/healthz'
+    | '/api/$'
+    | '/column/$columnId'
+    | '/api/rpc/$'
+    | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/$jobId/task/$taskId'
+  id:
+    | '__root__'
+    | '/'
+    | '/healthz'
+    | '/api/$'
+    | '/column/$columnId'
+    | '/api/rpc/$'
+    | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/$jobId/task/$taskId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HealthzRoute: typeof HealthzRoute
   ApiSplatRoute: typeof ApiSplatRoute
+  ColumnColumnIdRoute: typeof ColumnColumnIdRouteWithChildren
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
@@ -68,11 +129,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/healthz': {
+      id: '/healthz'
+      path: '/healthz'
+      fullPath: '/healthz'
+      preLoaderRoute: typeof HealthzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/$': {
       id: '/api/$'
       path: '/api/$'
       fullPath: '/api/$'
       preLoaderRoute: typeof ApiSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/column/$columnId': {
+      id: '/column/$columnId'
+      path: '/column/$columnId'
+      fullPath: '/column/$columnId'
+      preLoaderRoute: typeof ColumnColumnIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rpc/$': {
@@ -82,12 +157,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/column/$columnId/job/$jobId': {
+      id: '/column/$columnId/job/$jobId'
+      path: '/job/$jobId'
+      fullPath: '/column/$columnId/job/$jobId'
+      preLoaderRoute: typeof ColumnColumnIdJobJobIdRouteImport
+      parentRoute: typeof ColumnColumnIdRoute
+    }
+    '/column/$columnId/job/$jobId/task/$taskId': {
+      id: '/column/$columnId/job/$jobId/task/$taskId'
+      path: '/task/$taskId'
+      fullPath: '/column/$columnId/job/$jobId/task/$taskId'
+      preLoaderRoute: typeof ColumnColumnIdJobJobIdTaskTaskIdRouteImport
+      parentRoute: typeof ColumnColumnIdJobJobIdRoute
+    }
   }
 }
 
+interface ColumnColumnIdJobJobIdRouteChildren {
+  ColumnColumnIdJobJobIdTaskTaskIdRoute: typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
+}
+
+const ColumnColumnIdJobJobIdRouteChildren: ColumnColumnIdJobJobIdRouteChildren =
+  {
+    ColumnColumnIdJobJobIdTaskTaskIdRoute:
+      ColumnColumnIdJobJobIdTaskTaskIdRoute,
+  }
+
+const ColumnColumnIdJobJobIdRouteWithChildren =
+  ColumnColumnIdJobJobIdRoute._addFileChildren(
+    ColumnColumnIdJobJobIdRouteChildren,
+  )
+
+interface ColumnColumnIdRouteChildren {
+  ColumnColumnIdJobJobIdRoute: typeof ColumnColumnIdJobJobIdRouteWithChildren
+}
+
+const ColumnColumnIdRouteChildren: ColumnColumnIdRouteChildren = {
+  ColumnColumnIdJobJobIdRoute: ColumnColumnIdJobJobIdRouteWithChildren,
+}
+
+const ColumnColumnIdRouteWithChildren = ColumnColumnIdRoute._addFileChildren(
+  ColumnColumnIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HealthzRoute: HealthzRoute,
   ApiSplatRoute: ApiSplatRoute,
+  ColumnColumnIdRoute: ColumnColumnIdRouteWithChildren,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,0 +1,30 @@
+services:
+  charon-production:
+    container_name: charon-production
+    image: charon-production:${CHARON_RELEASE_TAG:?CHARON_RELEASE_TAG must name an immutable release image}
+    ports:
+      - "80:3000"
+    environment:
+      CHARON_DB_PATH: /data/charon.db
+      NODE_ENV: production
+      PORT: "3000"
+    volumes:
+      - charon-production-data:/data
+    restart: unless-stopped
+    init: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "const response = await fetch('http://127.0.0.1:3000/healthz'); if (!response.ok) process.exit(1)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  charon-production-data:
+    name: charon-production-data

@@ -8,19 +8,19 @@ import {
 import { PointerActivationConstraints } from '@dnd-kit/dom'
 import { isSortable } from '@dnd-kit/react/sortable'
 
-import { CardLoader } from '#/card/components/Card'
+import { JobLoader } from '#/job/components/Job'
 
 import { Column } from './Column'
 
-import type { BoardView } from '#/board/board-store'
+import type { BoardView } from '#/board/board-types'
 
 export interface BoardProps {
   board: BoardView
-  onMoveCard: (cardId: number, destinationColumnId: number, destinationIndex: number) => void
+  onMoveJob: (jobId: number, destinationColumnId: number, destinationIndex: number) => void
 }
 
-function cardDndId(cardId: number) {
-  return `card:${cardId}`
+function jobDndId(jobId: number) {
+  return `job:${jobId}`
 }
 
 function columnGroup(columnId: number) {
@@ -34,18 +34,18 @@ function columnIdFromGroup(group: string | number | undefined) {
   return Number.isInteger(columnId) ? columnId : null
 }
 
-/** DnD owns only ordered card IDs; each card resolves its own queried content. */
-export function Board({ board, onMoveCard }: BoardProps) {
+/** DnD owns only ordered job IDs; each job resolves its own queried content. */
+export function Board({ board, onMoveJob }: BoardProps) {
   function handleDragEnd({ operation }: DragEndEvent) {
     const source = operation.source
     if (operation.canceled || !source || !isSortable(source)) return
 
-    const cardId = source.data.cardId
+    const jobId = source.data.jobId
     const destinationColumnId = columnIdFromGroup(source.group)
-    if (typeof cardId !== 'number' || destinationColumnId === null) return
+    if (typeof jobId !== 'number' || destinationColumnId === null) return
 
     requestAnimationFrame(() => {
-      onMoveCard(cardId, destinationColumnId, source.index)
+      onMoveJob(jobId, destinationColumnId, source.index)
     })
   }
 
@@ -61,11 +61,11 @@ export function Board({ board, onMoveCard }: BoardProps) {
         KeyboardSensor,
       ]}
     >
-      <div className="kanban-board">
-        <div className="board-columns">
+      <div className="flex min-w-0 flex-1">
+        <div className="flex flex-1 items-start gap-4 overflow-x-auto px-6 py-5 overscroll-x-contain">
           {board.columns.map((column) => (
             <Column
-              cardDndId={cardDndId}
+              jobDndId={jobDndId}
               column={column}
               group={columnGroup(column.id)}
               key={column.id}
@@ -74,10 +74,10 @@ export function Board({ board, onMoveCard }: BoardProps) {
         </div>
       </div>
 
-      <DragOverlay className="drag-overlay" dropAnimation={null}>
+      <DragOverlay className="cursor-grabbing shadow-2xl" dropAnimation={null}>
         {(source) => {
-          const cardId = source.data.cardId
-          return typeof cardId === 'number' ? <CardLoader cardId={cardId} eager /> : null
+          const jobId = source.data.jobId
+          return typeof jobId === 'number' ? <JobLoader jobId={jobId} eager /> : null
         }}
       </DragOverlay>
     </DragDropProvider>

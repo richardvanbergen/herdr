@@ -1,9 +1,13 @@
 import { os } from "@orpc/server";
 
-import { cardRouter } from "#/card/server/orpc";
+import { jobRouter } from "#/job/server/orpc";
+import { boardRouter } from "#/board/server/orpc";
+import { taskRouter } from "#/task/server/orpc";
 
 const router = os.router({
-	card: cardRouter,
+	job: jobRouter,
+	board: boardRouter,
+	task: taskRouter,
 });
 
 export default router;

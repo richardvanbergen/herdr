@@ -13,7 +13,7 @@ function isNearViewport(element: Element, margin: number) {
 
 /**
  * IntersectionObserver is a DOM subscription, so an effect is required here.
- * It controls only query eligibility, never card content state.
+ * It controls only query eligibility, never job content state.
  */
 export function useInView<T extends Element>(prefetchMargin = 240) {
   const ref = useRef<T | null>(null)

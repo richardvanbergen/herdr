@@ -9,6 +9,7 @@
     ./modules/zellij.nix
     ./modules/hermes-agent.nix
     ./modules/tailscale-serve.nix
+    ./modules/charon-production.nix
   ];
 
   boot.loader.grub.enable = true;

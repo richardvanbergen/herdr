@@ -1,0 +1,8 @@
+.git
+node_modules
+dist
+dist-ssr
+.tanstack
+.env
+*.local
+charon.db

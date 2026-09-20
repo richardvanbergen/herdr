@@ -1,0 +1,121 @@
+#!/usr/bin/env sh
+# Production release workflow
+#
+# The production container is controlled by the Nix-declared
+# charon-production systemd path/service pair. This script never builds from a
+# dirty checkout: it archives HEAD and builds that exact committed tree.
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+state_dir=/var/lib/charon
+compose_state="$state_dir/production-compose.yml"
+env_state="$state_dir/production.env"
+release_state="$state_dir/release.json"
+backup_dir="$state_dir/backups"
+
+fail() {
+  printf 'Release aborted: %s\n' "$*" >&2
+  exit 1
+}
+
+write_release_tag() {
+  tag=$1
+  temp_env=$(mktemp "$state_dir/production.env.XXXXXX")
+  printf 'CHARON_RELEASE_TAG=%s\n' "$tag" > "$temp_env"
+  chmod 0640 "$temp_env"
+  mv "$temp_env" "$env_state"
+  # The Nix path unit watches this exact file and starts the release service.
+  touch "$env_state"
+}
+
+is_running_release() {
+  tag=$1
+  image=$(docker inspect --format '{{.Config.Image}}' charon-production 2>/dev/null || true)
+  [ "$image" = "charon-production:$tag" ] \
+    && curl --fail --silent --show-error http://127.0.0.1/healthz >/dev/null
+}
+
+wait_for_release() {
+  tag=$1
+  for attempt in $(seq 1 45); do
+    if is_running_release "$tag"; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+command -v docker >/dev/null || fail 'Docker is required.'
+command -v curl >/dev/null || fail 'curl is required.'
+command -v tar >/dev/null || fail 'tar is required.'
+
+[ -z "$(git -C "$repo_root" status --porcelain)" ] \
+  || fail 'Git working tree must be completely clean, including untracked files.'
+
+git -C "$repo_root" fetch --quiet origin main
+head_sha=$(git -C "$repo_root" rev-parse HEAD)
+remote_sha=$(git -C "$repo_root" rev-parse origin/main)
+[ "$head_sha" = "$remote_sha" ] || fail 'HEAD must be committed, pushed, and equal to origin/main.'
+
+[ -d "$state_dir" ] || fail "$state_dir is missing; deploy the Nix charon-production module first."
+[ -w "$state_dir" ] || fail "$state_dir is not writable by this release user."
+
+release_tag=$head_sha
+work_dir=$(mktemp -d)
+cleanup() {
+  rm -rf "$work_dir"
+}
+trap cleanup EXIT INT TERM
+
+mkdir -p "$backup_dir"
+git -C "$repo_root" archive --format=tar "$head_sha" | tar -xf - -C "$work_dir"
+
+docker build \
+  --file "$work_dir/charon/Dockerfile.production" \
+  --tag "charon-production:$release_tag" \
+  "$work_dir/charon"
+
+previous_tag=''
+if [ -f "$env_state" ]; then
+  previous_tag=$(sed -n 's/^CHARON_RELEASE_TAG=//p' "$env_state" | head -n 1)
+fi
+
+backup_path=''
+if docker volume inspect charon-production-data >/dev/null 2>&1 \
+  && docker run --rm \
+    --volume charon-production-data:/data \
+    --entrypoint sh "charon-production:$release_tag" \
+    -c '[ -f /data/charon.db ]'; then
+  timestamp=$(date -u +%Y%m%dT%H%M%SZ)
+  backup_name="charon-$timestamp-before-$release_tag.db"
+  backup_path="$backup_dir/$backup_name"
+  docker run --rm \
+    --volume charon-production-data:/data \
+    --volume "$backup_dir:/backups" \
+    --entrypoint bun "charon-production:$release_tag" \
+    -e "import { Database } from 'bun:sqlite'; const db = new Database('/data/charon.db'); db.exec(\"VACUUM INTO '/backups/$backup_name'\"); db.close()"
+fi
+
+# Recreate the development container from this clean commit. On the first
+# release this moves Vite from its legacy host port 80 to its permanent 7000.
+docker compose \
+  --project-directory "$repo_root/charon" \
+  --file "$repo_root/charon/docker-compose.yml" \
+  up --detach --build --remove-orphans
+
+install -m 0644 "$work_dir/charon/docker-compose.production.yml" "$compose_state"
+write_release_tag "$release_tag"
+
+if ! wait_for_release "$release_tag"; then
+  if [ -n "$previous_tag" ]; then
+    printf 'Release %s failed its health check; restoring %s.\n' "$release_tag" "$previous_tag" >&2
+    write_release_tag "$previous_tag"
+    wait_for_release "$previous_tag" || true
+  fi
+  fail 'Production health check did not become healthy.'
+fi
+
+printf '{\n  "gitSha": "%s",\n  "imageTag": "%s",\n  "releasedAt": "%s",\n  "previousImageTag": "%s",\n  "backupPath": "%s"\n}\n' \
+  "$head_sha" "$release_tag" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$previous_tag" "$backup_path" > "$release_state"
+printf 'Released Charon %s to production.\n' "$head_sha"

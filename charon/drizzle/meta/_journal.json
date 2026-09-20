@@ -15,6 +15,27 @@
       "when": 1789874267707,
       "tag": "0001_boring_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789877130508,
+      "tag": "0002_bent_midnight",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789877661413,
+      "tag": "0003_normal_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789883432542,
+      "tag": "0004_dazzling_shiva",
+      "breakpoints": true
     }
   ]
 }
