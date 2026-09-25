@@ -1,3 +1,4 @@
+import { workflowRouter } from "#/workflow/server/orpc";
 import { os } from "@orpc/server";
 
 import { jobRouter } from "#/job/server/orpc";
@@ -12,6 +13,7 @@ const router = os.router({
 	task: taskRouter,
 	conversation: conversationRouter,
 	context: contextRouter,
+	workflow: workflowRouter,
 });
 
 export default router;

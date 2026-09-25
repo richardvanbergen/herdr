@@ -1,3 +1,4 @@
+import { workflow } from "#/workflow/server/store";
 import { ORPCError, os } from "@orpc/server";
 import { asc, eq } from "drizzle-orm";
 import * as z from "zod";
@@ -38,7 +39,7 @@ export const addJob = os.input(z.object({
 		columnId: input.columnId,
 		position: placement.length,
 	}).run();
-	return job;
+	return { ...job, workflow: workflow(job.id) };
 }));
 
 export const moveJob = os.input(z.object({

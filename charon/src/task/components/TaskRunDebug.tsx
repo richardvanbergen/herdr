@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { taskRunQueryOptions } from "../queries/task-run-query-options";
 import { TaskRunHistoryView } from "./TaskRunHistoryView";
 export function TaskRunDebug({ taskId }: { taskId: number }) {
-	const runs = useQuery(taskRunQueryOptions(taskId));
+	const runs = useQuery({
+		...taskRunQueryOptions(taskId),
+		refetchInterval: 5000,
+	});
 	return (
 		<TaskRunHistoryView
 			runs={runs.data ?? []}

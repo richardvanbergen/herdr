@@ -1,3 +1,4 @@
+import { touchJob } from "#/workflow/server/store";
 import { ORPCError, os } from "@orpc/server";
 import { asc, desc, eq } from "drizzle-orm";
 import * as z from "zod";
@@ -21,6 +22,7 @@ export const createTask = os.input(jobId.extend({
 	}
 	const last = tx.select({ position: tasks.position }).from(tasks)
 		.where(eq(tasks.jobId, input.jobId)).orderBy(desc(tasks.position)).limit(1).get();
+	touchJob(input.jobId);
 	return tx.insert(tasks).values({
 		jobId: input.jobId,
 		text: input.text,
@@ -34,12 +36,14 @@ export const updateTask = os.input(taskId.extend({
 	const task = db.update(tasks).set({ text: input.text })
 		.where(eq(tasks.id, input.id)).returning().get();
 	if (!task) throw new ORPCError("NOT_FOUND");
+	touchJob(task.jobId);
 	return task;
 });
 
 export const deleteTask = os.input(taskId).handler(({ input }) => {
 	const task = db.delete(tasks).where(eq(tasks.id, input.id)).returning().get();
 	if (!task) throw new ORPCError("NOT_FOUND");
+	touchJob(task.jobId);
 	return task;
 });
 

@@ -1,3 +1,4 @@
+import { touchJob } from "#/workflow/server/store";
 import { contextActionInstruction } from "#/context/actions";
 import { createServerFn } from "@tanstack/react-start";
 import { asc, eq } from "drizzle-orm";
@@ -61,6 +62,7 @@ export const replyToThread = createServerFn({ method: "POST" })
 				.where(eq(conversationThreads.id, thread.id))
 				.run();
 		}
+		touchJob(job.id);
 		yield { type: "started", messageId: human.id };
 
 		const history = db

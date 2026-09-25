@@ -41,7 +41,7 @@ The job backend is deliberately small until its contract expands:
 
 ## Task model
 
-Tasks are ordered text entries under a job. Persist each task with its own ID, parent `job_id`, text, and position. Keep task schema, procedures, query options, and editing UI under `src/task/`.
+Tasks are ordered text entries under a job. Persist each task with its own ID, parent `job_id`, text, position, human/agent assignee, and todo/done state. Agent-created tasks carry an idempotency request ID. Keep task schema, procedures, query options, and editing UI under `src/task/`.
 
 ## Release workflow
 
@@ -90,4 +90,23 @@ selected runner's native file tools. Append preserves existing metadata/body and
 asks for a file/content when ambiguous; review is read-only. Require an enabled
 job context reference and a filesystem-capable runner (Codex or Hermes). Do not
 present these prompt actions as deterministic API/MCP tools or claim saved changes
-without file-tool confirmation. Scheduled workflow processing remains unimplemented.
+without file-tool confirmation. Scheduled workflow processing is defined below.
+
+
+## Ready workflow and Hermes
+
+`src/workflow/` owns job readiness, claims, discussion, and agent operations.
+Ready is a persistent toggle. Human replies and edits queue a ready job; saving
+an agent reply never queues itself. Keep board placement independent of readiness.
+Jobs own the outcome ("What done looks like"); tasks own execution and human/agent
+assignment. Preserve claim tokens, revision checks and idempotency keys. Never
+replay uncertain runs automatically or treat a run receipt as completed work.
+
+Hermes uses MCP via `hermes/charon/mcp_server.py` and the shared oRPC operations.
+Nix owns that server's runtime/config and an idempotent cron registration service
+in the gateway profile. The scheduled prompt is `hermes/charon/scheduled-prompt.md`.
+It must report blockers/results with job links via cron's Telegram delivery, emit
+[SILENT] when idle, and verify saved output/tool evidence before claiming success.
+Do not set up a competing cron in Richard's CLI profile or manually edit cron JSON.
+Keep NixOS activation separate from Charon's committed release workflow.
+See `docs/hermes-workflow.md` for activation, recovery and testing.

@@ -82,16 +82,21 @@ export function TaskDetail({
 }
 
 export function TaskList({
+	poll = false,
 	jobId,
 	columnId,
 }: {
 	jobId: number;
 	columnId?: number;
+	poll?: boolean;
 }) {
 	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const queryKey = taskQueryOptions(jobId).queryKey;
-	const tasks = useQuery(taskQueryOptions(jobId));
+	const tasks = useQuery({
+		...taskQueryOptions(jobId),
+		refetchInterval: poll ? 5000 : false,
+	});
 	const create = useMutation({
 		mutationFn: () => client.task.create({ jobId, text: "New task" }),
 		onSuccess: async (task) => {

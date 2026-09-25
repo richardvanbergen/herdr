@@ -1,3 +1,4 @@
+import { JobWorkflow } from "#/workflow/components/JobWorkflow";
 import { Outlet, useNavigate, useMatches } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { jobQueryOptions } from "#/job/queries/job-query-options";
@@ -54,7 +55,10 @@ export function JobLayout({
 			}
 		>
 			<div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-				<JobLoader jobId={jobId} columnId={columnId} eager fullPage />
+				<div className="space-y-8">
+					<JobLoader jobId={jobId} columnId={columnId} eager fullPage />
+					<JobWorkflow jobId={jobId} />
+				</div>
 				<JobContext jobId={jobId} columnId={columnId} selected={contextFile} />
 			</div>
 			{remove.isError ? (

@@ -1,3 +1,4 @@
+import { workflow, touchJob } from "#/workflow/server/store";
 import { ORPCError, os } from "@orpc/server";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
@@ -18,7 +19,7 @@ export const getJob = os.input(jobIdInput).handler(({ input }) => {
 		throw new ORPCError("NOT_FOUND");
 	}
 
-	return job;
+	return { ...job, workflow: workflow(job.id) };
 });
 
 export const updateJob = os
@@ -34,7 +35,8 @@ export const updateJob = os
 			.get();
 
 		if (!job) throw new ORPCError("NOT_FOUND");
-		return job;
+		touchJob(job.id);
+		return { ...job, workflow: workflow(job.id) };
 	});
 
 export const deleteJob = os.input(jobIdInput).handler(({ input }) => db.transaction((tx) => {

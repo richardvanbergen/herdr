@@ -1,3 +1,5 @@
+import { WorkflowStatus } from "#/workflow/components/WorkflowStatus";
+import type { jobWorkflow } from "#/workflow/server/schema";
 import { memo, type Ref } from "react";
 import { JobView } from "./JobView";
 import { useSortable } from "@dnd-kit/react/sortable";
@@ -14,7 +16,7 @@ import { Card } from "#/components/ui/card";
 import type { Job } from "#/job/server/schema";
 
 export interface JobPreviewProps {
-	job: Job;
+	job: Job & { workflow?: typeof jobWorkflow.$inferSelect };
 	columnId?: number;
 	fullPage?: boolean;
 	flat?: boolean;
@@ -108,7 +110,17 @@ export function JobPreview({
 					)}
 				</form.Field>
 			}
-			tasks={<TaskList jobId={job.id} columnId={columnId} />}
+			tasks={
+				<>
+					{job.workflow && (
+						<WorkflowStatus
+							ready={job.workflow.ready}
+							status={job.workflow.status}
+						/>
+					)}
+					<TaskList jobId={job.id} columnId={columnId} poll={fullPage} />
+				</>
+			}
 			saveError={mutation.isError}
 		/>
 	);

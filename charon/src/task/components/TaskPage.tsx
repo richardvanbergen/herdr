@@ -1,3 +1,4 @@
+import { JobWorkflow } from "#/workflow/components/JobWorkflow";
 import { JobContext } from "#/context/components/JobContext";
 import { TaskWorkspaceView, type TaskPanel } from "./TaskWorkspaceView";
 import {
@@ -34,7 +35,7 @@ export function TaskPage({
 	threadId?: number;
 	panel?: TaskPanel;
 }) {
-	const tasks = useQuery(taskQueryOptions(jobId));
+	const tasks = useQuery({ ...taskQueryOptions(jobId), refetchInterval: 5000 });
 	const task = tasks.data?.find((item) => item.id === taskId);
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
@@ -192,13 +193,21 @@ export function TaskPage({
 			}
 			output={<TaskOutputView output={task.output} live={live} />}
 			discussion={
-				<TaskConversation
-					useJobContext={task.useJobContext}
-					columnId={columnId}
-					jobId={jobId}
-					taskId={taskId}
-					threadId={threadId}
-				/>
+				<>
+					<JobWorkflow jobId={jobId} taskId={taskId} />
+					<details className="mt-6">
+						<summary className="text-sm text-muted-foreground">
+							Direct runner conversations
+						</summary>
+						<TaskConversation
+							useJobContext={task.useJobContext}
+							columnId={columnId}
+							jobId={jobId}
+							taskId={taskId}
+							threadId={threadId}
+						/>
+					</details>
+				</>
 			}
 			activity={
 				<>

@@ -14,6 +14,7 @@ let
   hermesPackage = if cfg.extraPythonPackages == [ ] && cfg.extraDependencyGroups == [ ]
     then cfg.package
     else cfg.package.override { inherit (cfg) extraPythonPackages extraDependencyGroups; };
+  charonPython = pkgs.python3.withPackages (ps: [ ps.mcp ]);
   operatorCli = pkgs.writeShellScriptBin "hermes" ''
     # Override stale exports in pre-rebuild shells as well as new logins.
     export HERMES_HOME="$HOME/.hermes"
@@ -51,6 +52,11 @@ in
       api_mode = "codex_responses";
     };
     settings.agent.reasoning_effort = "high";
+    settings.mcp_servers.charon = {
+      command = "${charonPython}/bin/python3";
+      args = [ "${../hermes/charon/mcp_server.py}" ];
+      env.CHARON_API_URL = "http://127.0.0.1";
+    };
 
     environmentFiles = [ config.sops.secrets.hermes-env.path ];
 
@@ -59,6 +65,25 @@ in
     # The upstream global HERMES_HOME export also shares owner-only SQLite
     # databases. Provision per-user state with shared inputs below instead.
     addToSystemPackages = false;
+  };
+
+  # Reconcile the schedule in the gateway's profile, not Richard's CLI profile.
+  # The public cron CLI preserves unrelated schedules and takes Hermes's locks.
+  systemd.services.charon-hermes-schedule = {
+    description = "Register Charon ready-job processing with Hermes";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "hermes-agent.service" ];
+    requires = [ "hermes-agent.service" ];
+    restartTriggers = [ ../hermes/charon/scheduled-prompt.md ../hermes/charon/register_cron.py ];
+    environment.HERMES_HOME = hermesHome;
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = cfg.user;
+      Group = cfg.group;
+      WorkingDirectory = cfg.stateDir;
+      ExecStart = "${pkgs.python3}/bin/python3 ${../hermes/charon/register_cron.py} ${hermesPackage}/bin/hermes ${../hermes/charon/scheduled-prompt.md}";
+    };
   };
 
   # Upstream only grants hostUsers access in container mode. Native mode

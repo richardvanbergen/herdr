@@ -7,6 +7,11 @@ function TaskRow({ task, columnId }: { task: Task; columnId?: number }) {
 	const content = (
 		<span className="block min-w-0">
 			<span className="block truncate text-sm text-muted-foreground">
+				{task.state === "done"
+					? "✓ "
+					: task.assignee === "human"
+						? "You · "
+						: ""}
 				{task.text}
 			</span>
 			{task.output ? (
