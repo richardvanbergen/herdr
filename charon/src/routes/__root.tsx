@@ -4,6 +4,8 @@ import {
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 
+import { WorkspaceContainer } from '#/workspace/components/WorkspaceContainer'
+
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
@@ -26,14 +28,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark scheme-dark">
       <head>
         <HeadContent />
       </head>
       <body>
-        <div className="min-h-dvh bg-[#03050d] font-sans text-[#e8eaf6]">
-          {children}
-        </div>
+        <WorkspaceContainer>{children}</WorkspaceContainer>
         <Scripts />
       </body>
     </html>

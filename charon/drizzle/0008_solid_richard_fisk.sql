@@ -1,0 +1,1 @@
+ALTER TABLE `tasks` ADD `use_job_context` integer DEFAULT true NOT NULL;

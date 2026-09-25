@@ -1,0 +1,131 @@
+{
+  "method": "Same local headless Chromium, production builds, 1440x1000, 8 synthetic jobs with 3 tasks each, 5 cancelled drags per build; activation includes CDP input dispatch overhead. Sequential runs, no CPU throttling. Not a device-level latency benchmark.",
+  "before": {
+    "styles": {
+      "margin": "0px",
+      "background": "rgb(12, 13, 15)",
+      "columns": [
+        359.25,
+        359.25,
+        359.25,
+        359.25
+      ]
+    },
+    "samples": [
+      {
+        "trial": 0,
+        "activationMs": 79.4905020000001,
+        "editors": 9,
+        "taskRequests": 1,
+        "scriptMs": 89.994,
+        "layoutMs": 12.102,
+        "framesOver25ms": 2,
+        "frameP95": 18.599999964237213
+      },
+      {
+        "trial": 1,
+        "activationMs": 61.9861149999997,
+        "editors": 9,
+        "taskRequests": 1,
+        "scriptMs": 62.635999999999996,
+        "layoutMs": 12.024,
+        "framesOver25ms": 1,
+        "frameP95": 17.899999976158142
+      },
+      {
+        "trial": 2,
+        "activationMs": 64.65906300000006,
+        "editors": 9,
+        "taskRequests": 1,
+        "scriptMs": 61.00799999999998,
+        "layoutMs": 12.548000000000004,
+        "framesOver25ms": 1,
+        "frameP95": 17.69999998807907
+      },
+      {
+        "trial": 3,
+        "activationMs": 59.25475600000027,
+        "editors": 9,
+        "taskRequests": 1,
+        "scriptMs": 58.78999999999998,
+        "layoutMs": 10.279000000000003,
+        "framesOver25ms": 1,
+        "frameP95": 17.600000023841858
+      },
+      {
+        "trial": 4,
+        "activationMs": 58.11779999999999,
+        "editors": 9,
+        "taskRequests": 1,
+        "scriptMs": 55.373000000000005,
+        "layoutMs": 10.327000000000004,
+        "framesOver25ms": 1,
+        "frameP95": 17.799999952316284
+      }
+    ]
+  },
+  "after": {
+    "styles": {
+      "margin": "0px",
+      "background": "rgb(12, 13, 15)",
+      "columns": [
+        359.25,
+        359.25,
+        359.25,
+        359.25
+      ]
+    },
+    "samples": [
+      {
+        "trial": 0,
+        "activationMs": 67.17649100000017,
+        "editors": 8,
+        "taskRequests": 0,
+        "scriptMs": 81.021,
+        "layoutMs": 12.142,
+        "framesOver25ms": 1,
+        "frameP95": 17.700000047683716
+      },
+      {
+        "trial": 1,
+        "activationMs": 52.97629400000005,
+        "editors": 8,
+        "taskRequests": 0,
+        "scriptMs": 57.76499999999999,
+        "layoutMs": 9.471999999999998,
+        "framesOver25ms": 1,
+        "frameP95": 18.5
+      },
+      {
+        "trial": 2,
+        "activationMs": 63.052074000000175,
+        "editors": 8,
+        "taskRequests": 0,
+        "scriptMs": 56.31900000000001,
+        "layoutMs": 11.225,
+        "framesOver25ms": 1,
+        "frameP95": 17.69999998807907
+      },
+      {
+        "trial": 3,
+        "activationMs": 57.728798999999526,
+        "editors": 8,
+        "taskRequests": 0,
+        "scriptMs": 51.21299999999998,
+        "layoutMs": 9.969999999999999,
+        "framesOver25ms": 1,
+        "frameP95": 17.5
+      },
+      {
+        "trial": 4,
+        "activationMs": 48.90355600000112,
+        "editors": 8,
+        "taskRequests": 0,
+        "scriptMs": 51.395000000000024,
+        "layoutMs": 11.13900000000001,
+        "framesOver25ms": 1,
+        "frameP95": 17.5
+      }
+    ]
+  }
+}

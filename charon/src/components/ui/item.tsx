@@ -3,7 +3,7 @@ import { cn } from '#/lib/utils'
 
 function Item({ className, ...props }: React.ComponentProps<'div'>) {
   return <div data-slot="item" className={cn(
-    'flex min-w-0 items-center gap-3 border border-[#1b2745] bg-[#0b1022]/80 p-4 text-[#e8eaf6] transition-colors hover:border-[#00d4ff] hover:bg-[#121a30]/90',
+    'flex min-w-0 items-center gap-3 border border-border bg-card/80 p-4 text-foreground transition-colors hover:border-primary/30 hover:bg-white/[.03]',
     className,
   )} {...props} />
 }

@@ -1,8 +1,14 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 import { taskQueryOptions } from '#/task/queries/task-query-options'
+import type { TaskPanel } from '#/task/components/TaskWorkspaceView'
 import { TaskPage } from '#/task/components/TaskPage'
 
 export const Route = createFileRoute('/column/$columnId/job/$jobId/task/$taskId')({
+  validateSearch: (search): { thread?: number; panel?: TaskPanel } => {
+    const thread = Number(search.thread)
+    const panel = ['output', 'discussion', 'activity', 'context'].includes(String(search.panel)) ? search.panel as TaskPanel : undefined
+    return { thread: Number.isSafeInteger(thread) && thread > 0 ? thread : undefined, panel }
+  },
   loader: async ({ context, params }) => {
     const columnId = Number(params.columnId)
     const jobId = Number(params.jobId)
@@ -17,5 +23,6 @@ export const Route = createFileRoute('/column/$columnId/job/$jobId/task/$taskId'
 
 function TaskRoute() {
   const { columnId, jobId, taskId } = Route.useLoaderData()
-  return <TaskPage columnId={columnId} jobId={jobId} taskId={taskId} />
+  const { thread, panel } = Route.useSearch()
+  return <TaskPage key={taskId} panel={panel} columnId={columnId} jobId={jobId} taskId={taskId} threadId={thread} />
 }

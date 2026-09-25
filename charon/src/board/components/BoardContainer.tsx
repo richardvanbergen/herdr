@@ -1,3 +1,6 @@
+import { jobQueryOptions } from '#/job/queries/job-query-options'
+import { taskQueryOptions } from '#/task/queries/task-query-options'
+import type { JobDragPreviewData } from '#/job/components/JobDragPreview'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { boardQueryOptions } from '#/board/queries/board-query-options'
 import { client } from '#/orpc/client'
@@ -39,8 +42,21 @@ export function BoardContainer() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: boardQueryOptions.queryKey }),
   })
 
+  function getDragPreview(jobId: number): JobDragPreviewData {
+    // Read only at drag start. Never mount observers, fetch, or copy full outputs.
+    const job = queryClient.getQueryData(jobQueryOptions(jobId, true).queryKey)
+    const tasks = queryClient.getQueryData(taskQueryOptions(jobId).queryKey)
+    return {
+      title: job?.title ?? `Job #${jobId}`,
+      description: job?.description?.slice(0, 240) ?? null,
+      taskCount: tasks?.length ?? null,
+      taskSummaries: tasks?.slice(0, 3).map(task => task.text.slice(0, 160)) ?? [],
+    }
+  }
+
   return <Board
     board={board}
+    getDragPreview={getDragPreview}
     onMoveJob={(jobId, columnId, index) => move.mutate({ jobId, columnId, index })}
   />
 }

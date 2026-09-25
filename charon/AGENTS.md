@@ -13,6 +13,12 @@ A domain owns and co-locates its:
 
 Do not split one feature across generic technical-layer directories. Keep route files thin: they compose domain entry components rather than implementing domain behavior.
 
+## Presentation and data containers
+
+Keep Lumina-derived presentation separate from fetching, persistence, and orchestration. Domain containers own TanStack Query, mutations, form autosave, router decisions, and streams. Domain views receive values, callbacks, and composition slots through props; they must not import the API client or query hooks. Presentation may own transient display state. Keep this split inside each domain.
+
+Preserve Charon's dnd-kit sensors, sortable IDs/groups, drop handling, and optimistic board-order mutation when changing presentation. Lumina's prototype drag behavior is not an implementation reference.
+
 ## Shared UI primitives
 
 Use Tailwind utility classes for all application styling and the existing `cn` helper for conditional classes. Use shadcn/ui primitives where they fit. Do not add custom CSS rules; `src/styles.css` is only for Tailwind imports and `@theme` tokens.
@@ -53,4 +59,35 @@ Do not create or extend backend behavior until its contract has been explicitly 
 
 Charon is a workspace for a self-improving agent system. The web UI is the human-facing place to create jobs and tasks, review work, and read results. A task run is the unit of agent execution. Its prompt includes the task text and parent job context; add project context when projects exist. Persist the latest output on the task so it can be reviewed in the task detail and previewed in lists.
 
-The current Codex CLI runner is a proof of concept behind the `AgentRunner.run(prompt)` interface. Keep provider-specific process handling in `src/agent/`; future Hermes, OpenRouter, and other adapters should implement the same seam. Longer term, new items should be evaluated by focused agents, routed, labelled, researched, and discussed with the human through Hermes orchestration. This direction does not imply those orchestration features already exist.
+Task execution uses `AgentRunner.run(prompt)` as an async event stream. Keep runner-specific behavior in `src/agent/`; Codex app-server and AI SDK/OpenRouter adapters both emit Charon status, text, and tool events. The task page consumes those events and stores the latest final output. Persist each run's status and output separately in `task_runs`. New adapters must use the same event contract. Longer term, new items should be evaluated by focused agents, routed, labelled, researched, and discussed with the human through Hermes orchestration. This direction does not imply those orchestration features already exist.
+
+Task runs persist the exact submitted application prompt and timestamped status/tool events, including returned tool output, working directory, and command exit codes where the adapter provides them. Keep this evidence when a run fails or is interrupted. `executeTaskRun` owns execution and persistence; the server function only exposes its stream. The task's Run debugging section shows recent runs after reload. Older runs have no captured prompt/activity; never reconstruct them and present them as recorded history. Codex sessions are currently ephemeral and separate from the developer's interactive Codex session.
+
+Task conversations are separate from task runs. A task may have multiple threads, each with ordered human and agent messages and a selected runner. A conversation reply must not replace task instructions or task run output. The selected thread lives in the task URL search parameters. Conversation messages are discussion history; deliberately saved context files are shared job memory.
+
+Runner IDs and display labels live in `src/agent/runner-options.ts`; task input validation, conversation persistence, and both selectors share them. Hermes executes the installed profile through `hermes chat --query-file - --oneshot --format stream-json --source tool`. Prompts travel on stdin, never through shell interpolation. Preserve Hermes text deltas and tool events in the same `AgentRunner` contract. Hermes currently caps tool-result output at 5,000 characters; the debugger shows what its CLI supplied.
+
+When Hermes is on the host and Charon is in Docker, `scripts/hermes-bridge.ts` serves a private Unix socket in the bind-mounted workspace. The adapter discovers `.hermes-runner.sock` or uses `CHARON_HERMES_SOCKET`. The bridge maps Charon's `/workspace` paths to its host working directory in a runtime instruction and emits the mapping as a status event. It runs the existing host profile without copying credentials into Docker. Direct installations can use `HERMES_PATH` instead. The `charon-hermes` user service runs this bridge; it is separate from the Hermes messaging gateway.
+
+## Job context
+
+Context lives in physical job folders, managed by `src/context/`. `CHARON_CONTEXT_ROOT` selects the root; its default is `context/` beside `CHARON_DB_PATH` (or the local `charon.db`). Keep it on persistent storage and back it up with the database. Job IDs determine folders: `<root>/jobs/<id>/`.
+
+The human editor and agents use the same files. Text context is Markdown with optional YAML `type: text`, `title`, and `description`. Plain Markdown/text files and nested folders are supported; no generated catalog or database copy is authoritative. The editor selection is the job URL's `context` search parameter. Use the shared Item primitive and TanStack Form for editing.
+
+Both task runs and conversation replies use `jobContextPrompt` to supply the folder path and discovery/save instructions. Do not inject all file contents. Codex uses its native file tools; the runner permits the configured context root while retaining the project working directory. Each task's persisted `useJobContext` flag defaults to true and can be removed/restored by the human. It controls the supplied reference, not filesystem access or existing chat history.
+
+When the reference is enabled, instruct the agent to discover relevant files before answering, read metadata as well as bodies, and apply their requirements. An empty body can still have meaningful title/description metadata. If file access fails or conflicts with a task instruction, report the conflict rather than silently proceeding. Confirm actual context reads using recorded tool results; including a folder path alone is not evidence that it was read.
+
+Refresh the job context query after agent turns and UI saves. UI saves atomically replace files and check their content version to detect stale drafts. Direct agent/editor writes remain ordinary file operations. Preload, full revision history, project/task context scopes, and OpenRouter context writing are future work.
+
+Codex runs inside Docker use app-server's external sandbox policy because Docker supplies isolation and nested bubblewrap cannot create namespaces under the default container policy. Host runs retain workspace-write plus the context root. `CHARON_CODEX_SANDBOX` can explicitly select `workspace-write` or `external`; external mode requires an already isolated runtime.
+
+Conversation context actions use exact first-line commands: `/context remember`,
+`/context append`, and `/context review`. The shared vocabulary lives in
+`src/context/actions.ts`. Buttons only populate the draft; sending invokes the
+selected runner's native file tools. Append preserves existing metadata/body and
+asks for a file/content when ambiguous; review is read-only. Require an enabled
+job context reference and a filesystem-capable runner (Codex or Hermes). Do not
+present these prompt actions as deterministic API/MCP tools or claim saved changes
+without file-tool confirmation. Scheduled workflow processing remains unimplemented.

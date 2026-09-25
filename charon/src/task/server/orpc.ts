@@ -3,9 +3,7 @@ import { asc, desc, eq } from "drizzle-orm";
 import * as z from "zod";
 import { db } from "#/db";
 import { jobs } from "#/job/server/schema";
-import { tasks } from "#/task/server/schema";
-import { taskPrompt } from "#/agent/runner";
-import { taskRunner } from "#/agent/codex-runner";
+import { tasks, taskRuns } from "#/task/server/schema";
 
 const taskId = z.object({ id: z.number().int().positive() });
 const jobId = z.object({ jobId: z.number().int().positive() });
@@ -45,20 +43,16 @@ export const deleteTask = os.input(taskId).handler(({ input }) => {
 	return task;
 });
 
-export const runTask = os.input(taskId.extend({ text: z.string().trim().min(1) })).handler(async ({ input }) => {
-	const task = db.select().from(tasks).where(eq(tasks.id, input.id)).get();
-	if (!task) throw new ORPCError("NOT_FOUND");
-	const job = db.select().from(jobs).where(eq(jobs.id, task.jobId)).get();
-	if (!job) throw new ORPCError("NOT_FOUND");
-	db.update(tasks).set({ text: input.text }).where(eq(tasks.id, task.id)).run();
-	const output = await taskRunner.run(taskPrompt({ job, task: input.text }));
-	return db.update(tasks).set({ output }).where(eq(tasks.id, task.id)).returning().get();
-});
-
 export const taskRouter = {
+	runs: os.input(taskId).handler(({ input }) =>
+		db.select().from(taskRuns).where(eq(taskRuns.taskId, input.id)).orderBy(desc(taskRuns.id)).limit(20).all()),
+	setJobContext: os.input(taskId.extend({ enabled: z.boolean() })).handler(({ input }) => {
+		const task = db.update(tasks).set({ useJobContext: input.enabled }).where(eq(tasks.id, input.id)).returning().get();
+		if (!task) throw new ORPCError("NOT_FOUND");
+		return task;
+	}),
 	list: listTasks,
 	create: createTask,
 	update: updateTask,
 	delete: deleteTask,
-	run: runTask,
 };

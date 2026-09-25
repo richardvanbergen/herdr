@@ -1,0 +1,1 @@
+ALTER TABLE `conversation_threads` ADD `runner` text DEFAULT 'codex' NOT NULL;

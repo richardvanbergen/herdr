@@ -1,0 +1,16 @@
+[Unit]
+Description=Charon Hermes runner bridge
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/code/herdr/charon
+ExecStart=/run/current-system/sw/bin/bun /code/herdr/charon/scripts/hermes-bridge.ts
+Environment=PATH=/run/current-system/sw/bin:/usr/bin:/bin
+Environment=HERMES_PATH=/run/current-system/sw/bin/hermes
+Restart=on-failure
+RestartSec=3
+KillMode=control-group
+
+[Install]
+WantedBy=default.target

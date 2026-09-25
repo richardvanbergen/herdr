@@ -3,7 +3,7 @@ import { cn } from '#/lib/utils'
 
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return <div data-slot="card" className={cn(
-    'flex flex-col border border-[#1b2745] bg-[#0b1022]/80 text-[#e8eaf6] transition-colors hover:border-[#00d4ff] hover:bg-[#121a30]/90',
+    'flex flex-col border border-border bg-card/80 text-foreground transition-colors hover:border-primary/30 hover:bg-white/[.03]',
     className,
   )} {...props} />
 }

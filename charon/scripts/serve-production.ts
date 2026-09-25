@@ -1,3 +1,4 @@
+// @ts-expect-error The generated server bundle does not publish declarations.
 import app from '../dist/server/server.js'
 
 const port = Number(process.env.PORT ?? 3000)

@@ -36,6 +36,41 @@
       "when": 1789883432542,
       "tag": "0004_dazzling_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789903982339,
+      "tag": "0005_living_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790069971054,
+      "tag": "0006_material_nick_fury",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790070434554,
+      "tag": "0007_mute_mulholland_black",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790215286902,
+      "tag": "0008_solid_richard_fisk",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790217515228,
+      "tag": "0009_lowly_adam_warlock",
+      "breakpoints": true
     }
   ]
 }
