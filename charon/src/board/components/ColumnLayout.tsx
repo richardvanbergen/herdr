@@ -5,8 +5,8 @@ import { boardQueryOptions } from "#/board/queries/board-query-options";
 import { Column } from "./Column";
 
 export function ColumnLayout({ columnId }: { columnId: number }) {
-	const nested = useMatches().some(
-		(match) => match.routeId === "/column/$columnId/job/$jobId",
+	const nested = useMatches().some((match) =>
+		match.routeId.startsWith("/column/$columnId/job/"),
 	);
 	const board = useQuery(boardQueryOptions);
 	const column = board.data?.columns.find((item) => item.id === columnId);

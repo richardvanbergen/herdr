@@ -90,31 +90,10 @@ export function TaskList({
 	columnId?: number;
 	poll?: boolean;
 }) {
-	const queryClient = useQueryClient();
 	const navigate = useNavigate();
-	const queryKey = taskQueryOptions(jobId).queryKey;
 	const tasks = useQuery({
 		...taskQueryOptions(jobId),
 		refetchInterval: poll ? 5000 : false,
-	});
-	const create = useMutation({
-		mutationFn: () => client.task.create({ jobId, text: "New task" }),
-		onSuccess: async (task) => {
-			queryClient.setQueryData<Task[]>(queryKey, (current) =>
-				current ? [...current, task] : [task],
-			);
-			if (columnId !== undefined) {
-				await navigate({
-					to: "/column/$columnId/job/$jobId/task/$taskId",
-					params: {
-						columnId: String(columnId),
-						jobId: String(jobId),
-						taskId: String(task.id),
-					},
-				});
-			}
-			void queryClient.invalidateQueries({ queryKey });
-		},
 	});
 
 	return (
@@ -122,9 +101,15 @@ export function TaskList({
 			tasks={tasks.data ?? []}
 			columnId={columnId}
 			loadError={tasks.isError}
-			adding={create.isPending}
-			addError={create.isError}
-			onAdd={() => create.mutate()}
+			adding={false}
+			addError={false}
+			onAdd={() => {
+				if (columnId !== undefined)
+					void navigate({
+						to: "/column/$columnId/job/$jobId/task/new",
+						params: { columnId: String(columnId), jobId: String(jobId) },
+					});
+			}}
 		/>
 	);
 }

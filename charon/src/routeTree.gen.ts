@@ -15,7 +15,9 @@ import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as ColumnColumnIdRouteImport } from './routes/column.$columnId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api.rpc.$'
 import { Route as ColumnColumnIdJobJobIdRouteImport } from './routes/column.$columnId.job.$jobId'
+import { Route as ColumnColumnIdJobNewRouteImport } from './routes/column.$columnId.job.new'
 import { Route as ColumnColumnIdJobJobIdTaskTaskIdRouteImport } from './routes/column.$columnId.job.$jobId.task.$taskId'
+import { Route as ColumnColumnIdJobJobIdTaskNewRouteImport } from './routes/column.$columnId.job.$jobId.task.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -47,10 +49,21 @@ const ColumnColumnIdJobJobIdRoute = ColumnColumnIdJobJobIdRouteImport.update({
   path: '/job/$jobId',
   getParentRoute: () => ColumnColumnIdRoute,
 } as any)
+const ColumnColumnIdJobNewRoute = ColumnColumnIdJobNewRouteImport.update({
+  id: '/job/new',
+  path: '/job/new',
+  getParentRoute: () => ColumnColumnIdRoute,
+} as any)
 const ColumnColumnIdJobJobIdTaskTaskIdRoute =
   ColumnColumnIdJobJobIdTaskTaskIdRouteImport.update({
     id: '/task/$taskId',
     path: '/task/$taskId',
+    getParentRoute: () => ColumnColumnIdJobJobIdRoute,
+  } as any)
+const ColumnColumnIdJobJobIdTaskNewRoute =
+  ColumnColumnIdJobJobIdTaskNewRouteImport.update({
+    id: '/task/new',
+    path: '/task/new',
     getParentRoute: () => ColumnColumnIdJobJobIdRoute,
   } as any)
 
@@ -61,7 +74,9 @@ export interface FileRoutesByFullPath {
   '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/new': typeof ColumnColumnIdJobNewRoute
   '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
+  '/column/$columnId/job/$jobId/task/new': typeof ColumnColumnIdJobJobIdTaskNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,7 +85,9 @@ export interface FileRoutesByTo {
   '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/new': typeof ColumnColumnIdJobNewRoute
   '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
+  '/column/$columnId/job/$jobId/task/new': typeof ColumnColumnIdJobJobIdTaskNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,7 +97,9 @@ export interface FileRoutesById {
   '/column/$columnId': typeof ColumnColumnIdRouteWithChildren
   '/api/rpc/$': typeof ApiRpcSplatRoute
   '/column/$columnId/job/$jobId': typeof ColumnColumnIdJobJobIdRouteWithChildren
+  '/column/$columnId/job/new': typeof ColumnColumnIdJobNewRoute
   '/column/$columnId/job/$jobId/task/$taskId': typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
+  '/column/$columnId/job/$jobId/task/new': typeof ColumnColumnIdJobJobIdTaskNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,7 +110,9 @@ export interface FileRouteTypes {
     | '/column/$columnId'
     | '/api/rpc/$'
     | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/new'
     | '/column/$columnId/job/$jobId/task/$taskId'
+    | '/column/$columnId/job/$jobId/task/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,7 +121,9 @@ export interface FileRouteTypes {
     | '/column/$columnId'
     | '/api/rpc/$'
     | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/new'
     | '/column/$columnId/job/$jobId/task/$taskId'
+    | '/column/$columnId/job/$jobId/task/new'
   id:
     | '__root__'
     | '/'
@@ -109,7 +132,9 @@ export interface FileRouteTypes {
     | '/column/$columnId'
     | '/api/rpc/$'
     | '/column/$columnId/job/$jobId'
+    | '/column/$columnId/job/new'
     | '/column/$columnId/job/$jobId/task/$taskId'
+    | '/column/$columnId/job/$jobId/task/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,6 +189,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ColumnColumnIdJobJobIdRouteImport
       parentRoute: typeof ColumnColumnIdRoute
     }
+    '/column/$columnId/job/new': {
+      id: '/column/$columnId/job/new'
+      path: '/job/new'
+      fullPath: '/column/$columnId/job/new'
+      preLoaderRoute: typeof ColumnColumnIdJobNewRouteImport
+      parentRoute: typeof ColumnColumnIdRoute
+    }
     '/column/$columnId/job/$jobId/task/$taskId': {
       id: '/column/$columnId/job/$jobId/task/$taskId'
       path: '/task/$taskId'
@@ -171,17 +203,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ColumnColumnIdJobJobIdTaskTaskIdRouteImport
       parentRoute: typeof ColumnColumnIdJobJobIdRoute
     }
+    '/column/$columnId/job/$jobId/task/new': {
+      id: '/column/$columnId/job/$jobId/task/new'
+      path: '/task/new'
+      fullPath: '/column/$columnId/job/$jobId/task/new'
+      preLoaderRoute: typeof ColumnColumnIdJobJobIdTaskNewRouteImport
+      parentRoute: typeof ColumnColumnIdJobJobIdRoute
+    }
   }
 }
 
 interface ColumnColumnIdJobJobIdRouteChildren {
   ColumnColumnIdJobJobIdTaskTaskIdRoute: typeof ColumnColumnIdJobJobIdTaskTaskIdRoute
+  ColumnColumnIdJobJobIdTaskNewRoute: typeof ColumnColumnIdJobJobIdTaskNewRoute
 }
 
 const ColumnColumnIdJobJobIdRouteChildren: ColumnColumnIdJobJobIdRouteChildren =
   {
     ColumnColumnIdJobJobIdTaskTaskIdRoute:
       ColumnColumnIdJobJobIdTaskTaskIdRoute,
+    ColumnColumnIdJobJobIdTaskNewRoute: ColumnColumnIdJobJobIdTaskNewRoute,
   }
 
 const ColumnColumnIdJobJobIdRouteWithChildren =
@@ -191,10 +232,12 @@ const ColumnColumnIdJobJobIdRouteWithChildren =
 
 interface ColumnColumnIdRouteChildren {
   ColumnColumnIdJobJobIdRoute: typeof ColumnColumnIdJobJobIdRouteWithChildren
+  ColumnColumnIdJobNewRoute: typeof ColumnColumnIdJobNewRoute
 }
 
 const ColumnColumnIdRouteChildren: ColumnColumnIdRouteChildren = {
   ColumnColumnIdJobJobIdRoute: ColumnColumnIdJobJobIdRouteWithChildren,
+  ColumnColumnIdJobNewRoute: ColumnColumnIdJobNewRoute,
 }
 
 const ColumnColumnIdRouteWithChildren = ColumnColumnIdRoute._addFileChildren(

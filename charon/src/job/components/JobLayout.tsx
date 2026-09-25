@@ -25,8 +25,8 @@ export function JobLayout({
 	jobId: number;
 	contextFile?: string;
 }) {
-	const nested = useMatches().some(
-		(match) => match.routeId === "/column/$columnId/job/$jobId/task/$taskId",
+	const nested = useMatches().some((match) =>
+		match.routeId.startsWith("/column/$columnId/job/$jobId/task/"),
 	);
 	const job = useQuery(jobQueryOptions(jobId, true));
 	const navigate = useNavigate();

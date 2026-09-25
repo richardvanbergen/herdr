@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { taskQueryOptions } from "#/task/queries/task-query-options";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "@tanstack/react-form";
@@ -49,17 +50,17 @@ export function JobWorkflow({
 		}) => client.workflow.task(input),
 		onSuccess: refresh,
 	});
-	const replyId = useRef(crypto.randomUUID());
+	const replyId = useRef<string | null>(null);
 	const send = useMutation({
 		mutationFn: (content: string) =>
 			client.workflow.reply({
 				jobId,
 				content,
 				taskId,
-				requestId: replyId.current,
+				requestId: (replyId.current ??= nanoid()),
 			}),
 		onSuccess: async () => {
-			replyId.current = crypto.randomUUID();
+			replyId.current = null;
 			composer.reset();
 			await refresh();
 		},
@@ -203,7 +204,7 @@ export function JobWorkflow({
 								placeholder="That sounds good, add a task to…"
 								value={field.state.value}
 								onChange={(event) => {
-									replyId.current = crypto.randomUUID();
+									replyId.current = null;
 									field.handleChange(event.target.value);
 								}}
 								disabled={send.isPending}

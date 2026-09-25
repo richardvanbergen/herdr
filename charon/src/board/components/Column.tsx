@@ -3,11 +3,6 @@ import { CollisionPriority } from "@dnd-kit/abstract";
 import { ColumnView } from "./ColumnView";
 import { JobLoader, SortableJob } from "#/job/components/Job";
 import { useNavigate } from "@tanstack/react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { boardQueryOptions } from "#/board/queries/board-query-options";
-import { jobQueryOptions } from "#/job/queries/job-query-options";
-import { client } from "#/orpc/client";
-import type { BoardView } from "#/board/board-types";
 
 import type { BoardColumn } from "#/board/board-types";
 
@@ -33,47 +28,21 @@ export function Column({
 		collisionPriority: CollisionPriority.Low,
 	});
 	const navigate = useNavigate();
-	const queryClient = useQueryClient();
-	const add = useMutation({
-		mutationFn: () =>
-			client.board.addJob({
-				columnId: column.id,
-				title: "New job",
-				description: null,
-			}),
-		onSuccess: async (job) => {
-			queryClient.setQueryData(jobQueryOptions(job.id, true).queryKey, job);
-			queryClient.setQueryData<BoardView>(
-				boardQueryOptions.queryKey,
-				(current) =>
-					current
-						? {
-								columns: current.columns.map((item) =>
-									item.id === column.id
-										? { ...item, jobIds: [...item.jobIds, job.id] }
-										: item,
-								),
-							}
-						: current,
-			);
-			await navigate({
-				to: "/column/$columnId/job/$jobId",
-				params: { columnId: String(column.id), jobId: String(job.id) },
-			});
-			void queryClient.invalidateQueries({
-				queryKey: boardQueryOptions.queryKey,
-			});
-		},
-	});
+
 	return (
 		<ColumnView
 			column={column}
 			dropRef={dropRef}
 			isDropTarget={isDropTarget || dropIndex !== undefined}
 			fullPage={fullPage}
-			adding={add.isPending}
-			error={add.isError}
-			onAdd={() => add.mutate()}
+			adding={false}
+			error={false}
+			onAdd={() => {
+				void navigate({
+					to: "/column/$columnId/job/new",
+					params: { columnId: String(column.id) },
+				});
+			}}
 		>
 			{column.jobIds.flatMap((jobId, index) => [
 				...(!fullPage && dropIndex === index

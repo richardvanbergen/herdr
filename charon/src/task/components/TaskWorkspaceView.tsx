@@ -104,7 +104,7 @@ export function TaskWorkspaceView({
 				>
 					<div
 						className={cn(
-							"min-h-0 flex-1 flex-col",
+							"min-h-0 flex-1 flex-col gap-6 overflow-auto p-4",
 							panel !== "activity" ? "flex" : "hidden",
 						)}
 					>

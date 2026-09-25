@@ -117,3 +117,10 @@ Exclude deleted jobs from board queries and reject new reads/mutations/execution
 through their job/task APIs. Deletion disables Ready and revokes agent claims.
 `job.restore` restores visibility with readiness still off. Confirm deletion in
 the UI, remove the ID from the board cache, navigate away, then evict the job query.
+
+
+New jobs/tasks use dedicated `/new` routes and unsaved TanStack Form state. Opening
+or typing in those forms must not call create. Only explicit Save creates an item
+and navigates to its returned numeric ID; the existing editor then autosaves.
+Browser reply request IDs use Nano ID on submission (retained across retries),
+not crypto.randomUUID, because the application also runs on insecure HTTP.
