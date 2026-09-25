@@ -1,3 +1,4 @@
+import { requireActiveJob } from "#/job/server/active";
 import { touchJob } from "#/workflow/server/store";
 import { contextActionInstruction } from "#/context/actions";
 import { createServerFn } from "@tanstack/react-start";
@@ -39,6 +40,7 @@ export const replyToThread = createServerFn({ method: "POST" })
 		const job =
 			task && db.select().from(jobs).where(eq(jobs.id, task.jobId)).get();
 		if (!task || !job) throw new Error("Conversation context not found");
+		requireActiveJob(job.id);
 
 		const actionInstruction = contextActionInstruction(
 			data.content,

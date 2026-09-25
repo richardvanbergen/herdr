@@ -1,8 +1,6 @@
-import { ORPCError, os } from "@orpc/server";
-import { eq } from "drizzle-orm";
+import { requireActiveJob } from "#/job/server/active";
+import { os } from "@orpc/server";
 import * as z from "zod";
-import { db } from "#/db";
-import { jobs } from "#/job/server/schema";
 import {
 	createContext,
 	deleteContext,
@@ -21,8 +19,7 @@ const textInput = z.object({
 	body: z.string().max(1_000_000),
 });
 function withJob<T>(jobId: number, action: () => T): T {
-	if (!db.select({ id: jobs.id }).from(jobs).where(eq(jobs.id, jobId)).get())
-		throw new ORPCError("NOT_FOUND", { message: "Job not found." });
+	requireActiveJob(jobId);
 	return action();
 }
 

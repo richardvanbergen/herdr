@@ -1,9 +1,9 @@
+import { requireActiveJob } from "#/job/server/active";
 import { jobMessages, jobWorkflow } from "#/workflow/server/schema";
 import { and, eq } from "drizzle-orm";
 import { db } from "#/db";
 import { getRunner } from "#/agent/registry";
 import { taskPrompt, type AgentRunner } from "#/agent/runner";
-import { jobs } from "#/job/server/schema";
 import { jobContextPrompt } from "#/context/server/prompt";
 import { taskRuns, tasks } from "./schema";
 import type { RunActivity, TaskRunInput, TaskStreamEvent } from "../run-types";
@@ -14,8 +14,7 @@ export async function* executeTaskRun(
 ): AsyncGenerator<TaskStreamEvent> {
 	const task = db.select().from(tasks).where(eq(tasks.id, data.id)).get();
 	if (!task) throw new Error("Task not found");
-	const job = db.select().from(jobs).where(eq(jobs.id, task.jobId)).get();
-	if (!job) throw new Error("Parent job not found");
+	const job = requireActiveJob(task.jobId);
 
 	const run = db.transaction(() => {
 		if (

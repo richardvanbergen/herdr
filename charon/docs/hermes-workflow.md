@@ -63,8 +63,11 @@ Process restarts can interrupt execution: this is not a durable distributed work
 Running rows older than the ten-minute execution limit plus one minute are marked
 failed at the next queue check. Expired claims become blocked with a recovery
 message; uncertain work is never automatically replayed. The cron pass reports
-recovery notices. Review evidence before retrying. SQLite foreign-key enforcement
-now removes workflow/message/dispatch rows when their parent is deleted.
+recovery notices. Review evidence before retrying. Job deletion is soft: it retains tasks, runs, messages, context and placement,
+disables Ready and revokes claims. Deleted jobs are hidden from the board and
+cannot receive new work. To recover one, POST `/api/job/restore` with
+`{"id": JOB_ID}`; it returns to its retained placement with Ready off.
+Foreign-key cascades apply only to explicit physical database removal.
 
 ## Activation
 

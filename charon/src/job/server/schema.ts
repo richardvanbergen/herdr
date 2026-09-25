@@ -7,6 +7,7 @@ export const jobs = sqliteTable("jobs", {
 	id: integer().primaryKey({ autoIncrement: true }),
 	title: text().notNull(),
 	description: text(),
+	deletedAt: integer("deleted_at"),
 });
 
 export type Job = typeof jobs.$inferSelect;

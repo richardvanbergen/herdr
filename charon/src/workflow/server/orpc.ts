@@ -1,3 +1,4 @@
+import { requireActiveTask } from "#/task/server/active";
 import type { AgentRunner } from "#/agent/runner";
 import { createRouterClient, ORPCError, os } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
@@ -144,6 +145,7 @@ export async function dispatchTask(
 	key: string,
 	runner?: AgentRunner,
 ) {
+	requireActiveTask(taskId);
 	const existing = db
 		.select()
 		.from(workflowDispatches)
@@ -211,6 +213,7 @@ export const workflowRouter = {
 		.handler(({ input }) => {
 			const task = db.select().from(tasks).where(eq(tasks.id, input.id)).get();
 			if (!task) throw new ORPCError("NOT_FOUND");
+			requireActiveTask(task.id);
 			if (
 				db
 					.select()

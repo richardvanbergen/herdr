@@ -1,3 +1,4 @@
+import { requireActiveJob } from "#/job/server/active";
 import { ORPCError } from "@orpc/server";
 import { and, asc, eq, lt, sql } from "drizzle-orm";
 import { db } from "#/db";
@@ -11,8 +12,7 @@ import {
 import { jobWorkflow, jobMessages } from "./schema";
 
 export function workflow(jobId: number) {
-	if (!db.select().from(jobs).where(eq(jobs.id, jobId)).get())
-		throw new ORPCError("NOT_FOUND");
+	requireActiveJob(jobId);
 	db.insert(jobWorkflow)
 		.values({ jobId, updatedAt: Date.now() })
 		.onConflictDoNothing()

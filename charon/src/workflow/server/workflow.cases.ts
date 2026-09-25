@@ -250,3 +250,121 @@ test("manual execution cannot overlap a scheduled run", async () => {
 	await expect(second.next()).rejects.toThrow("Task already running");
 	await first.return(undefined);
 });
+
+test("soft deletion hides the job, preserves its contents, revokes agent work and restores paused", async () => {
+	const { jobRouter } = await import("#/job/server/orpc");
+	const { boardRouter } = await import("#/board/server/orpc");
+	const { taskRouter } = await import("#/task/server/orpc");
+	const { contextRouter } = await import("#/context/server/orpc");
+	const { columns, jobPlacements } = await import("#/board/server/schema");
+	const { conversationRouter } = await import("#/conversation/server/orpc");
+	const { conversationMessages } = await import("#/conversation/server/schema");
+	const { readContext } = await import("#/context/server/store");
+	const client = createRouterClient({
+		job: jobRouter,
+		board: boardRouter,
+		task: taskRouter,
+		context: contextRouter,
+		conversation: conversationRouter,
+	});
+	const column = db
+		.insert(columns)
+		.values({ name: "Test backlog", position: 1 })
+		.returning()
+		.get();
+	const job = await client.board.addJob({
+		columnId: column.id,
+		title: "Preserve this job",
+	});
+	const task = await client.task.create({
+		jobId: job.id,
+		text: "Preserve this task",
+	});
+	const run = db
+		.insert(taskRuns)
+		.values({
+			taskId: task.id,
+			runner: "codex",
+			status: "completed",
+			output: "Saved poem",
+			startedAt: Date.now(),
+		})
+		.returning()
+		.get();
+	const thread = await client.conversation.createThread({ taskId: task.id });
+	db.insert(conversationMessages)
+		.values({
+			threadId: thread.id,
+			role: "human",
+			content: "Saved discussion",
+			createdAt: Date.now(),
+		})
+		.run();
+	const context = await client.context.create({
+		jobId: job.id,
+		content: {
+			type: "text",
+			title: "Poem",
+			description: "",
+			body: "Include Hephaestus.",
+		},
+	});
+	setReady(job.id, true);
+	const lease = claim(job.id);
+	await client.job.delete({ id: job.id });
+	await client.job.delete({ id: job.id }); // Retried deletion remains successful.
+	expect(
+		(await client.board.get()).columns.flatMap((c) => c.jobIds),
+	).not.toContain(job.id);
+	expect(
+		db.select().from(jobs).where(eq(jobs.id, job.id)).get()?.deletedAt,
+	).toBeNumber();
+	expect(db.select().from(tasks).where(eq(tasks.id, task.id)).get()?.text).toBe(
+		"Preserve this task",
+	);
+	expect(
+		db.select().from(taskRuns).where(eq(taskRuns.id, run.id)).get()?.output,
+	).toBe("Saved poem");
+	expect(
+		db
+			.select()
+			.from(conversationMessages)
+			.where(eq(conversationMessages.threadId, thread.id))
+			.all(),
+	).toHaveLength(1);
+	expect(
+		db
+			.select()
+			.from(jobPlacements)
+			.where(eq(jobPlacements.jobId, job.id))
+			.get(),
+	).toBeDefined();
+	expect(readContext(job.id, context.path).body).toBe("Include Hephaestus.");
+	expect(queue().some((row) => row.jobId === job.id)).toBe(false);
+	await expect(client.job.get({ id: job.id })).rejects.toThrow();
+	await expect(
+		client.task.update({ id: task.id, text: "Late autosave" }),
+	).rejects.toThrow();
+	await expect(client.task.delete({ id: task.id })).rejects.toThrow();
+	await expect(
+		client.conversation.createThread({ taskId: task.id }),
+	).rejects.toThrow();
+	await expect(
+		api.agent({
+			action: "heartbeat",
+			input: { jobId: job.id, token: lease.token! },
+		}),
+	).rejects.toThrow();
+	await expect(
+		client.board.moveJob({ jobId: job.id, columnId: column.id, index: 0 }),
+	).rejects.toThrow();
+	const restored = await client.job.restore({ id: job.id });
+	expect(restored.deletedAt).toBeNull();
+	expect(restored.workflow.ready).toBe(false);
+	expect((await client.board.get()).columns.flatMap((c) => c.jobIds)).toContain(
+		job.id,
+	);
+	expect((await client.task.list({ jobId: job.id }))[0].text).toBe(
+		"Preserve this task",
+	);
+});

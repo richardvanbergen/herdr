@@ -33,7 +33,7 @@ Place shared code outside a domain only when it is genuinely domain-agnostic and
 
 The job backend is deliberately small until its contract expands:
 
-- The persisted job content model is `id`, `title`, and nullable `description` only. Board placement, ordering, labels, and filter state do not belong to a job's content record.
+- The persisted job content model is `id`, `title`, nullable `description`, and a nullable `deletedAt` lifecycle timestamp. Board placement, ordering, labels, and filter state do not belong to a job's content record.
 - Put the Drizzle table, job-specific oRPC procedures, job query options, and job presentation components under `src/job/`.
 - Use oRPC's `queryOptions` helper with TanStack Query. A job component receives only `jobId`; it does not own a second job cache or fetch data imperatively.
 - TanStack Query controls query lifecycle and caching. It has no per-element IntersectionObserver primitive, so use the native `IntersectionObserver` only to derive query eligibility, then pass that boolean to the query's `enabled` option.
@@ -110,3 +110,10 @@ It must report blockers/results with job links via cron's Telegram delivery, emi
 Do not set up a competing cron in Richard's CLI profile or manually edit cron JSON.
 Keep NixOS activation separate from Charon's committed release workflow.
 See `docs/hermes-workflow.md` for activation, recovery and testing.
+
+
+Job deletion is soft: retain placement, tasks, runs, conversations and context.
+Exclude deleted jobs from board queries and reject new reads/mutations/execution
+through their job/task APIs. Deletion disables Ready and revokes agent claims.
+`job.restore` restores visibility with readiness still off. Confirm deletion in
+the UI, remove the ID from the board cache, navigate away, then evict the job query.
