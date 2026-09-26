@@ -10,7 +10,10 @@
     ./modules/hermes-agent.nix
     ./modules/tailscale-serve.nix
     ./modules/charon-production.nix
+    ./modules/paperclip.nix
   ];
+
+  services.paperclip.enable = true;
 
   boot.loader.grub.enable = true;
   boot.loader.grub.devices = [ "/dev/vda" ];

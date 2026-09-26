@@ -98,6 +98,8 @@
       zjstatusWasm = "${zjstatus.packages.${system}.default}/bin/zjstatus.wasm";
     in
     {
+      packages.${system}.paperclip = pkgs.callPackage ./packages/paperclip { };
+
       nixosConfigurations.herdr = nixpkgs.lib.nixosSystem {
         inherit system;
         modules = [

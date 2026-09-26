@@ -1,0 +1,8 @@
+{
+  "name": "herdr-paperclip",
+  "version": "2026.916.1",
+  "private": true,
+  "dependencies": {
+    "paperclipai": "2026.916.1"
+  }
+}

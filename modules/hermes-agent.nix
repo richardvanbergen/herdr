@@ -52,7 +52,7 @@ in
       api_mode = "codex_responses";
     };
     settings.agent.reasoning_effort = "high";
-    settings.mcp_servers.charon = {
+    settings.mcp_servers.charon = lib.mkIf (!config.services.paperclip.enable) {
       command = "${charonPython}/bin/python3";
       args = [ "${../hermes/charon/mcp_server.py}" ];
       env.CHARON_API_URL = "http://127.0.0.1";
@@ -70,6 +70,7 @@ in
   # Reconcile the schedule in the gateway's profile, not Richard's CLI profile.
   # The public cron CLI preserves unrelated schedules and takes Hermes's locks.
   systemd.services.charon-hermes-schedule = {
+    enable = !config.services.paperclip.enable;
     description = "Register Charon ready-job processing with Hermes";
     wantedBy = [ "multi-user.target" ];
     after = [ "hermes-agent.service" ];
@@ -83,6 +84,22 @@ in
       Group = cfg.group;
       WorkingDirectory = cfg.stateDir;
       ExecStart = "${pkgs.python3}/bin/python3 ${../hermes/charon/register_cron.py} ${hermesPackage}/bin/hermes ${../hermes/charon/scheduled-prompt.md}";
+    };
+  };
+
+  systemd.services.charon-hermes-pause = lib.mkIf config.services.paperclip.enable {
+    description = "Pause the retired Charon schedule without deleting it";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "hermes-agent.service" ];
+    requires = [ "hermes-agent.service" ];
+    environment.HERMES_HOME = hermesHome;
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = cfg.user;
+      Group = cfg.group;
+      WorkingDirectory = cfg.stateDir;
+      ExecStart = "${pkgs.python3}/bin/python3 ${../hermes/charon/pause_cron.py} ${hermesPackage}/bin/hermes";
     };
   };
 

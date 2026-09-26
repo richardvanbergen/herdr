@@ -13,6 +13,7 @@ in
   ];
 
   systemd.services.charon-production = {
+    enable = !config.services.paperclip.enable;
     description = "Run the released Charon production image";
     after = [ "docker.service" "network-online.target" ];
     wants = [ "network-online.target" ];
@@ -30,6 +31,7 @@ in
   # file lets the unprivileged release script request deployment without an
   # imperative sudo/systemctl escape hatch.
   systemd.paths.charon-production-release = {
+    enable = !config.services.paperclip.enable;
     description = "Deploy Charon when a new release manifest is written";
     wantedBy = [ "multi-user.target" ];
     pathConfig = {

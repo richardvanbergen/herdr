@@ -3,6 +3,12 @@
 NixOS flake for the `herdr` box. Hermes runs as one phone gateway, with
 `richard` sharing its model configuration, credentials, and identity.
 
+## Paperclip
+
+Paperclip is the web application on port 80; Charon is suspended with its data
+preserved. Nix manages the application, PostgreSQL, backups and proxy. See
+[Paperclip deployment](docs/paperclip.md) for rebuild, agent setup and rollback.
+
 ## Hermes and Marvin
 
 `modules/hermes-agent.nix` declares the provider and model:
