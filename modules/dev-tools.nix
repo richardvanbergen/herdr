@@ -28,6 +28,7 @@ in
   environment.systemPackages = [
     pkgs.git
     pkgs.bun
+    pkgs.bubblewrap
     pkgs.awscli
     pkgs.lazygit
     pkgs.gcc
@@ -35,7 +36,7 @@ in
     (lib.hiPrio ghWithToken)
   ];
 
-  services.hermes-agent.extraPackages = [ (lib.hiPrio ghWithToken) ];
+  services.hermes-agent.extraPackages = [ pkgs.bubblewrap (lib.hiPrio ghWithToken) ];
 
   # System Git config is rebuilt from Nix. Use the token-loading launcher,
   # rather than the raw gh binary that `gh auth setup-git` would record.
