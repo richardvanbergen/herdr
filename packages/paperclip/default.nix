@@ -17,6 +17,7 @@ buildNpmPackage {
     mkdir -p $out/lib/paperclip $out/bin
     cp -R node_modules $out/lib/paperclip/
     patch --batch --fuzz=0 -p1 -d "$out/lib/paperclip/node_modules/@paperclipai/adapter-utils" < ${./nixos-sandbox.patch}
+    patch --batch --fuzz=0 -p1 -d "$out/lib/paperclip/node_modules/@paperclipai/adapter-codex-local" < ${./codex-scratch.patch}
     patch --batch --fuzz=0 -p1 -d "$out/lib/paperclip/node_modules/@paperclipai/server" < ${./assignment-permission.patch}
     ui="$out/lib/paperclip/node_modules/@paperclipai/server/ui-dist"
     cp ${./http-crypto.js} "$ui/assets/herdr-http-crypto.js"

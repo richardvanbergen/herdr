@@ -1,0 +1,33 @@
+--- a/dist/server/execute.js
++++ b/dist/server/execute.js
+@@ -729,11 +729,29 @@
+         const billingType = resolveCodexBillingType(effectiveEnv);
+         const networkScope = parseLocalProcessNetworkScope(config.networkScope);
+         const filesystemScope = parseLocalProcessFilesystemScope(config.filesystemScope);
++        // Heartbeat scratch lives outside the workspace, under the host /tmp.
++        // The outer sandbox replaces /tmp, so explicitly share this run's directory.
++        const managedPaths = [{ path: effectiveCodexHome, access: "rw" }];
++        const scratch = parseObject(context.paperclipScratch);
++        if (filesystemScope && !executionTargetIsRemote && scratch.type === "heartbeat_run") {
++            const scratchDir = asString(scratch.dir, "");
++            try {
++                if (!path.isAbsolute(scratchDir) || !(await fs.lstat(scratchDir)).isDirectory())
++                    throw new Error("expected an absolute, existing directory (not a symlink)");
++                const marker = JSON.parse(await fs.readFile(path.join(scratchDir, ".paperclip-run-scratch.json"), "utf8"));
++                if (marker.runId !== runId || marker.agentId !== agent.id || marker.companyId !== agent.companyId)
++                    throw new Error("scratch ownership does not match this run");
++            }
++            catch (error) {
++                throw new Error(`Run scratch directory unavailable before sandbox startup: ${scratchDir}: ${error.message}`);
++            }
++            managedPaths.push({ path: scratchDir, access: "rw" });
++        }
+         const localProcessSandbox = (filesystemScope || networkScope) && !executionTargetIsRemote
+             ? {
+                 workspaceDir: effectiveExecutionCwd,
+                 filesystemScope,
+-                managedPaths: [{ path: effectiveCodexHome, access: "rw" }],
++                managedPaths,
+                 extraPaths: parseLocalProcessSandboxExtraPaths(config.filesystemExtraPaths),
+                 pathAliases: targetWorkspaceRealization?.mode === "copy"
+                     ? targetWorkspaceRealization.pathAliases
