@@ -99,7 +99,7 @@ in
       requires = [ "postgresql.service" "postgresql-setup.service" "paperclip-secrets.service" "charon-retire.service" ];
       # Use Richard's existing CLI login and per-user Hermes profile. The
       # Telegram gateway retains its separate Hermes-owned profile.
-      path = [ pkgs.nodejs_24 pkgs.git pkgs.bash pkgs.coreutils pkgs.ripgrep pkgs.python3 pkgs.postgresql_17 "/run/current-system/sw" ];
+      path = [ pkgs.bubblewrap pkgs.nodejs_24 pkgs.git pkgs.bash pkgs.coreutils pkgs.ripgrep pkgs.python3 pkgs.postgresql_17 "/run/current-system/sw" ];
       environment = {
         HOME = "/home/richard";
         NODE_ENV = "production";
