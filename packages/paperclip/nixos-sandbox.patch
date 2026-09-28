@@ -1,0 +1,37 @@
+--- a/dist/local-process-sandbox.js
++++ b/dist/local-process-sandbox.js
+@@ -4,6 +4,11 @@
+ import os from "node:os";
+ import path from "node:path";
+ const SYSTEM_READ_PATHS = [
++    // NixOS executables and shared libraries live outside /usr.
++    // Mount only immutable runtime paths, never the whole host /run or root.
++    "/nix/store",
++    "/run/current-system",
++    "/etc/static",
+     "/bin",
+     "/sbin",
+     "/usr",
+@@ -318,16 +323,18 @@
+     let executableArgs = input.args;
+     if (filesystemScope === "workspace") {
+         args.push("--tmpfs", "/", "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp");
+-        args.push("--symlink", "usr/bin", "/bin", "--symlink", "usr/sbin", "/sbin", "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64");
++        // Bind existing host paths directly; do not assume a merged-/usr layout.
+         const created = new Set(["/", "/proc", "/dev", "/tmp"]);
+-        const mounted = new Set();
++        const mounted = new Map();
+         const mount = async (source, access) => {
+             const normalized = normalizeAbsolutePath(source, "Sandbox path");
+-            if (mounted.has(normalized) || !(await pathExists(normalized)))
++            // Avoid mounting through symlinks inside an already mounted read-only tree.
++            const coveredRead = access === "ro" && Array.from(mounted).some(([parent, mode]) => mode === "ro" && normalized.startsWith(parent + "/"));
++            if (mounted.has(normalized) || coveredRead || !(await pathExists(normalized)))
+                 return;
+             addParentDirectories(args, created, normalized);
+             args.push(access === "rw" ? "--bind" : "--ro-bind", normalized, normalized);
+-            mounted.add(normalized);
++            mounted.set(normalized, access);
+             created.add(normalized);
+         };
+         for (const systemPath of SYSTEM_READ_PATHS)

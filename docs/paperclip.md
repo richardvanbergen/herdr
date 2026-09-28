@@ -64,6 +64,10 @@ connect Paperclip issue comments to the existing Telegram conversation.
 - A small packaged browser shim supplies UUID v4 using `getRandomValues` when
   `crypto.randomUUID` is unavailable on `http://herdr`. It loads before the
   upstream UI bundle and leaves native HTTPS implementations intact.
+- The local-process sandbox builder is patched for NixOS: it binds the host's
+  actual `/bin` layout and adds `/nix/store`, `/run/current-system` and
+  `/etc/static` read-only. It does not expose the whole host filesystem. Writable
+  workspace and managed-path rules remain controlled by Paperclip.
 - Paperclip applies its migrations on startup. Back up the database and state
   before changing the package version; Nix rollback does not reverse migrations.
 
