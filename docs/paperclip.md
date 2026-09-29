@@ -50,6 +50,8 @@ delivery is a separate integration to verify; the local adapter alone does not
 connect Paperclip issue comments to the existing Telegram conversation.
 
 ACP sessions also use the Nix-managed Codex through the service's `CODEX_PATH`.
+The package patch preserves that variable through Paperclip's local Codex ACP
+environment filter; setting it on the systemd service alone is insufficient.
 Without this setting, codex-acp selects its bundled 0.156.1 executable, which
 fails the local sandbox no-op probe with `cannot establish app-server socket
 mount isolation`. The system CLI passes that probe. After rebuilding, start a

@@ -1,0 +1,10 @@
+--- a/dist/acpx-engine/execute.js
++++ b/dist/acpx-engine/execute.js
+@@ -134,6 +134,7 @@
+     codex: new Set([
+         "OPENAI_API_KEY",
+         "CODEX_API_KEY",
++        "CODEX_PATH",
+     ]),
+     claude: new Set([
+         "ANTHROPIC_API_KEY",
