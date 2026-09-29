@@ -103,6 +103,9 @@ in
       environment = {
         HOME = "/home/richard";
         NODE_ENV = "production";
+        # ACP otherwise launches its npm-bundled Codex, independently of PATH.
+        # Use the same Nix-managed CLI as ordinary Codex runs.
+        CODEX_PATH = "/run/current-system/sw/bin/codex";
         PAPERCLIP_HOME = stateDir;
         PAPERCLIP_INSTANCE_ID = "default";
         PAPERCLIP_BIND = "loopback";
